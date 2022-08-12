@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 colored = "2.0.0"
 dialoguer = "0.10.2"
+thiserror = "1.0.32"
