@@ -4,13 +4,20 @@ mod cli;
 mod git;
 
 fn main() -> Result<(), Error> {
-    let args = cli::parse_args(std::env::args());
+    select_and_print_branches(std::env::args(), std::io::stdout())
+}
+
+fn select_and_print_branches(
+    cli_args: impl Iterator<Item = String>,
+    writer: impl std::io::Write,
+) -> Result<(), Error> {
+    let args = cli::parse_args(cli_args);
     let branches = git::branch_list(&args.git_dir);
     let selected = match select_branches(&branches)? {
         Some(x) => x,
         None => return Ok(()),
     };
-    write_branches(&selected, std::io::stdout())?;
+    write_branches(&selected, writer)?;
     Ok(())
 }
 
