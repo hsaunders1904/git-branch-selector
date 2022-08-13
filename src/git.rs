@@ -1,21 +1,7 @@
-use crate::Error;
 use std::process::Command;
 
 pub fn branch_list(working_dir: &str) -> Vec<String> {
     parse_branches(&call_branch_list(working_dir))
-}
-
-pub fn delete_branch(branch: &str, working_dir: &str) -> Result<(), Error> {
-    match Command::new("git")
-        .arg("branch")
-        .arg("-d")
-        .arg(branch)
-        .current_dir(working_dir)
-        .spawn()
-    {
-        Ok(_) => Ok(()),
-        Err(e) => Err(Error::Git(e.to_string())),
-    }
 }
 
 fn call_branch_list(working_dir: &str) -> String {

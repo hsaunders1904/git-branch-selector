@@ -8,11 +8,8 @@ pub enum Action {
 #[derive(Parser, Debug)]
 #[clap(author, version)]
 pub struct Args {
-    #[clap(value_enum)]
-    pub action: Action,
-
-    #[clap(short, long, value_parser, default_value_t = get_working_dir())]
-    pub root_dir: String,
+    #[clap(value_parser, default_value_t = get_working_dir())]
+    pub git_dir: String,
 }
 
 fn get_working_dir() -> String {

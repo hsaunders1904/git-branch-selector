@@ -1,22 +1,16 @@
-use colored::Colorize;
 use dialoguer::MultiSelect;
-use std::str;
+
 mod cli;
 mod git;
 
 fn main() -> Result<(), Error> {
     let args = cli::parse_args(std::env::args());
-    let branches = git::branch_list(&args.root_dir);
-    let to_delete = match select_branches(&branches)? {
+    let branches = git::branch_list(&args.git_dir);
+    let selected = match select_branches(&branches)? {
         Some(x) => x,
         None => return Ok(()),
     };
-    print_selection(&branches, &to_delete);
-    match confirm_action("Delete branches?", true)? {
-        false => return Ok(()),
-        true => (),
-    }
-    act_on_branches(|x: &str| git::delete_branch(x, &args.root_dir), &to_delete);
+    write_branches(&selected, std::io::stdout())?;
     Ok(())
 }
 
@@ -26,6 +20,8 @@ pub enum Error {
     Git(String),
     #[error("Error getting user input: {0}")]
     Interactive(String),
+    #[error("Error writing to output stream: {0}")]
+    Write(String),
 }
 
 fn select_branches(branches: &[String]) -> Result<Option<Vec<String>>, Error> {
@@ -43,38 +39,14 @@ fn select_branches(branches: &[String]) -> Result<Option<Vec<String>>, Error> {
     }
 }
 
-fn print_selection(full_collection: &[String], selected: &[String]) {
-    for item in full_collection {
-        if selected.contains(item) {
-            println!("❌ {}", item)
-        } else {
-            println!("✔️ {}", item);
-        }
+fn write_branches(branches: &[String], mut writer: impl std::io::Write) -> Result<(), Error> {
+    match write!(writer, "{}", branches.join(" ")) {
+        Ok(_) => (),
+        Err(e) => return Err(Error::Write(e.to_string())),
     }
-}
-
-fn confirm_action(message: &str, default: bool) -> Result<bool, Error> {
-    match dialoguer::Confirm::new()
-        .with_prompt(message)
-        .default(default)
-        .interact_opt()
-    {
-        Ok(x) => match x {
-            Some(_) => Ok(true),
-            None => Ok(false),
-        },
-        Err(e) => Err(Error::Interactive(e.to_string())),
+    match writer.flush() {
+        Ok(_) => (),
+        Err(e) => return Err(Error::Write(e.to_string())),
     }
-}
-
-fn act_on_branches<T>(func: T, branches: &Vec<String>)
-where
-    T: Fn(&str) -> Result<(), Error>,
-{
-    for branch in branches {
-        match func(branch) {
-            Ok(_) => (),
-            Err(e) => println!("⚠️ {} - {}", branch, format!("{}", e).yellow()),
-        }
-    }
+    Ok(())
 }
