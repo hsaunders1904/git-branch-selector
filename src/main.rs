@@ -12,7 +12,7 @@ pub enum Error {
 }
 
 fn clean_branch(branch: &str) -> &str {
-    match branch.trim().strip_prefix("*") {
+    match branch.trim().strip_prefix('*') {
         Some(x) => x,
         None => branch,
     }
@@ -52,7 +52,7 @@ fn git_branch_list(working_dir: &str) -> String {
 
 fn parse_branches(branch_list: &str) -> Vec<String> {
     branch_list
-        .split("\n")
+        .split('\n')
         .filter(|x| !x.trim().is_empty())
         .map(clean_branch)
         .map(|x| x.to_owned())
@@ -113,7 +113,7 @@ fn delete_branch(branch: &str, working_dir: &str) -> Result<(), Error> {
     }
 }
 
-fn select_branches(branches: &Vec<String>) -> Result<Option<Vec<String>>, Error> {
+fn select_branches(branches: &[String]) -> Result<Option<Vec<String>>, Error> {
     match MultiSelect::new().items(branches).interact_opt() {
         Ok(x) => match x {
             Some(choosen_idxs) => Ok(Some(
@@ -128,9 +128,9 @@ fn select_branches(branches: &Vec<String>) -> Result<Option<Vec<String>>, Error>
     }
 }
 
-fn print_selection(full_collection: &Vec<String>, selected: &Vec<String>) {
+fn print_selection(full_collection: &[String], selected: &[String]) {
     for item in full_collection {
-        if selected.contains(&item) {
+        if selected.contains(item) {
             println!("❌ {}", item)
         } else {
             println!("✔️ {}", item);
@@ -166,7 +166,7 @@ where
 
 fn parse_args(mut args: impl Iterator<Item = String>) -> String {
     match args.nth(1) {
-        Some(x) => x.clone(),
+        Some(x) => x,
         None => std::env::current_dir()
             .expect("Could not get working directory.")
             .to_str()
@@ -188,5 +188,5 @@ fn main() -> Result<(), Error> {
         true => (),
     }
     act_on_branches(|x: &str| delete_branch(x, &root_dir), &to_delete);
-    return Ok(());
+    Ok(())
 }
