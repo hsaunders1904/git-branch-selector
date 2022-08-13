@@ -3,6 +3,22 @@ use dialoguer::MultiSelect;
 use std::process::Command;
 use std::str;
 
+fn main() -> Result<(), Error> {
+    let root_dir = parse_args(std::env::args());
+    let branches = parse_branches(&git_branch_list(&root_dir));
+    let to_delete = match select_branches(&branches)? {
+        Some(x) => x,
+        None => return Ok(()),
+    };
+    print_selection(&branches, &to_delete);
+    match confirm_action("Delete branches?", true)? {
+        false => return Ok(()),
+        true => (),
+    }
+    act_on_branches(|x: &str| delete_branch(x, &root_dir), &to_delete);
+    Ok(())
+}
+
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("Git process failed: {0}")]
@@ -17,26 +33,6 @@ fn clean_branch(branch: &str) -> &str {
         None => branch,
     }
     .trim()
-}
-
-#[cfg(test)]
-mod clean_branch {
-    use crate::clean_branch;
-
-    #[test]
-    fn removes_whitespace_from_beginning_and_end() {
-        assert_eq!(clean_branch("  some branch   "), "some branch");
-    }
-
-    #[test]
-    fn removes_asterisk_from_beginning() {
-        assert_eq!(clean_branch("* some branch*"), "some branch*");
-    }
-
-    #[test]
-    fn removes_whitespace_and_asterisk_from_beginning() {
-        assert_eq!(clean_branch(" * some branch"), "some branch");
-    }
 }
 
 fn git_branch_list(working_dir: &str) -> String {
@@ -57,47 +53,6 @@ fn parse_branches(branch_list: &str) -> Vec<String> {
         .map(clean_branch)
         .map(|x| x.to_owned())
         .collect()
-}
-
-#[cfg(test)]
-mod parse_branches {
-    use crate::parse_branches;
-
-    #[test]
-    fn returns_all_listed() {
-        let branches_str = "  hsaunders1904/branch1
-        * main
-          branch3
-          _some-branch";
-
-        let mut branches = parse_branches(branches_str);
-
-        // Sort as we don't care about order
-        branches.sort();
-        let expected = vec!["_some-branch", "branch3", "hsaunders1904/branch1", "main"];
-        assert_eq!(branches, expected);
-    }
-
-    #[test]
-    fn ignores_empty_lines() {
-        let branches_str = "
-        hsaunders1904/branch1
-
-        * main
-
-          branch3
-
-
-          _some-branch
-          ";
-
-        let mut branches = parse_branches(branches_str);
-
-        // Sort as we don't care about order
-        branches.sort();
-        let expected = vec!["_some-branch", "branch3", "hsaunders1904/branch1", "main"];
-        assert_eq!(branches, expected);
-    }
 }
 
 fn delete_branch(branch: &str, working_dir: &str) -> Result<(), Error> {
@@ -175,18 +130,64 @@ fn parse_args(mut args: impl Iterator<Item = String>) -> String {
     }
 }
 
-fn main() -> Result<(), Error> {
-    let root_dir = parse_args(std::env::args());
-    let branches = parse_branches(&git_branch_list(&root_dir));
-    let to_delete = match select_branches(&branches)? {
-        Some(x) => x,
-        None => return Ok(()),
-    };
-    print_selection(&branches, &to_delete);
-    match confirm_action("Delete branches?", true)? {
-        false => return Ok(()),
-        true => (),
+#[cfg(test)]
+mod test {
+    mod parse_branches {
+        use crate::parse_branches;
+
+        #[test]
+        fn returns_all_listed() {
+            let branches_str = "  hsaunders1904/branch1
+        * main
+          branch3
+          _some-branch";
+
+            let mut branches = parse_branches(branches_str);
+
+            // Sort as we don't care about order
+            branches.sort();
+            let expected = vec!["_some-branch", "branch3", "hsaunders1904/branch1", "main"];
+            assert_eq!(branches, expected);
+        }
+
+        #[test]
+        fn ignores_empty_lines() {
+            let branches_str = "
+        hsaunders1904/branch1
+
+        * main
+
+          branch3
+
+
+          _some-branch
+          ";
+
+            let mut branches = parse_branches(branches_str);
+
+            // Sort as we don't care about order
+            branches.sort();
+            let expected = vec!["_some-branch", "branch3", "hsaunders1904/branch1", "main"];
+            assert_eq!(branches, expected);
+        }
     }
-    act_on_branches(|x: &str| delete_branch(x, &root_dir), &to_delete);
-    Ok(())
+
+    mod clean_branch {
+        use crate::clean_branch;
+
+        #[test]
+        fn removes_whitespace_from_beginning_and_end() {
+            assert_eq!(clean_branch("  some branch   "), "some branch");
+        }
+
+        #[test]
+        fn removes_asterisk_from_beginning() {
+            assert_eq!(clean_branch("* some branch*"), "some branch*");
+        }
+
+        #[test]
+        fn removes_whitespace_and_asterisk_from_beginning() {
+            assert_eq!(clean_branch(" * some branch"), "some branch");
+        }
+    }
 }
