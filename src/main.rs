@@ -1,11 +1,12 @@
 use colored::Colorize;
 use dialoguer::MultiSelect;
 use std::str;
+mod cli;
 mod git;
 
 fn main() -> Result<(), Error> {
-    let root_dir = parse_args(std::env::args());
-    let branches = git::branch_list(&root_dir);
+    let args = cli::parse_args(std::env::args());
+    let branches = git::branch_list(&args.root_dir);
     let to_delete = match select_branches(&branches)? {
         Some(x) => x,
         None => return Ok(()),
@@ -15,7 +16,7 @@ fn main() -> Result<(), Error> {
         false => return Ok(()),
         true => (),
     }
-    act_on_branches(|x: &str| git::delete_branch(x, &root_dir), &to_delete);
+    act_on_branches(|x: &str| git::delete_branch(x, &args.root_dir), &to_delete);
     Ok(())
 }
 
@@ -75,16 +76,5 @@ where
             Ok(_) => (),
             Err(e) => println!("⚠️ {} - {}", branch, format!("{}", e).yellow()),
         }
-    }
-}
-
-fn parse_args(mut args: impl Iterator<Item = String>) -> String {
-    match args.nth(1) {
-        Some(x) => x,
-        None => std::env::current_dir()
-            .expect("Could not get working directory.")
-            .to_str()
-            .unwrap()
-            .to_owned(),
     }
 }
