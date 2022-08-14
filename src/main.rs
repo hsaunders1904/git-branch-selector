@@ -13,7 +13,13 @@ fn select_and_print_branches(
     terminal: Term,
 ) -> Result<(), Error> {
     let args = cli::parse_args(cli_args);
-    let branches = git::branch_list(&args.git_dir);
+    let branches = match git::branch_list(&args.git_dir) {
+        Ok(x) => x,
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        }
+    };
     let selected = match select_branches(&branches, &terminal)? {
         Some(x) => x,
         None => return Ok(()),

@@ -1,18 +1,36 @@
+use crate::Error;
 use std::process::Command;
 
-pub fn branch_list(working_dir: &str) -> Vec<String> {
-    parse_branches(&call_branch_list(working_dir))
+pub fn branch_list(working_dir: &str) -> Result<Vec<String>, Error> {
+    match call_branch_list(working_dir) {
+        Ok(x) => Ok(parse_branches(&x)),
+        Err(e) => Err(e),
+    }
 }
 
-fn call_branch_list(working_dir: &str) -> String {
-    let output = Command::new("git")
+fn call_branch_list(working_dir: &str) -> Result<String, Error> {
+    let output = match Command::new("git")
         .arg("branch")
         .arg("--list")
         .current_dir(working_dir)
         .output()
-        .expect("'git' command failed.")
-        .stdout;
-    String::from_utf8(output).expect("Could not decode git branch output.")
+    {
+        Ok(x) => x,
+        Err(e) => return Err(Error::Git(e.to_string())),
+    };
+    if !output.status.success() {
+        return Err(Error::Git(format!(
+            "Error getting git branches: {}",
+            String::from_utf8(output.stderr).unwrap()
+        )));
+    }
+    match String::from_utf8(output.stdout) {
+        Ok(x) => Ok(x),
+        Err(e) => Err(Error::Git(format!(
+            "Could not decode git branch output: {}",
+            e
+        ))),
+    }
 }
 
 fn clean_branch(branch: &str) -> &str {
