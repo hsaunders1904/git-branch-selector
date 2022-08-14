@@ -1,19 +1,20 @@
-use dialoguer::MultiSelect;
+use dialoguer::{console::Term, MultiSelect};
 
 mod cli;
 mod git;
 
 fn main() -> Result<(), Error> {
-    select_and_print_branches(std::env::args(), std::io::stdout())
+    select_and_print_branches(std::env::args(), std::io::stdout(), Term::stderr())
 }
 
 fn select_and_print_branches(
     cli_args: impl Iterator<Item = String>,
     writer: impl std::io::Write,
+    terminal: Term,
 ) -> Result<(), Error> {
     let args = cli::parse_args(cli_args);
     let branches = git::branch_list(&args.git_dir);
-    let selected = match select_branches(&branches)? {
+    let selected = match select_branches(&branches, &terminal)? {
         Some(x) => x,
         None => return Ok(()),
     };
@@ -31,8 +32,8 @@ pub enum Error {
     Write(String),
 }
 
-fn select_branches(branches: &[String]) -> Result<Option<Vec<String>>, Error> {
-    match MultiSelect::new().items(branches).interact_opt() {
+fn select_branches(branches: &[String], terminal: &Term) -> Result<Option<Vec<String>>, Error> {
+    match MultiSelect::new().items(branches).interact_on_opt(terminal) {
         Ok(x) => match x {
             Some(choosen_idxs) => Ok(Some(
                 choosen_idxs
@@ -56,4 +57,26 @@ fn write_branches(branches: &[String], mut writer: impl std::io::Write) -> Resul
         Err(e) => return Err(Error::Write(e.to_string())),
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    mod write_branches {
+
+        use crate::write_branches;
+
+        #[test]
+        fn delimits_branches_with_space() {
+            let branches = vec![
+                "a".to_string(),
+                "branch".to_string(),
+                "c/branch".to_string(),
+            ];
+            let mut writer = Vec::new();
+
+            write_branches(&branches, &mut writer).unwrap();
+
+            assert_eq!(writer, b"a branch c/branch");
+        }
+    }
 }
