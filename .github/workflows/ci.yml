@@ -19,5 +19,11 @@ jobs:
       with:
         toolchain: stable
 
+    - name: Static Analysis
+      run: |
+        pip install pre-commit
+        pre-commit install
+        pre-commit run --all-files
+
     - name: Build & Test
       run: cargo test --release --all-features
