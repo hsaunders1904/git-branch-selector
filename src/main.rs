@@ -30,11 +30,11 @@ fn select_and_print_branches(
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("Git process failed: {0}")]
+    #[error("git error: {0}")]
     Git(String),
-    #[error("Error getting user input: {0}")]
+    #[error("user input error: {0}")]
     Interactive(String),
-    #[error("Error writing to output stream: {0}")]
+    #[error("output error: {0}")]
     Write(String),
 }
 
