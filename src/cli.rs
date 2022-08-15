@@ -9,10 +9,7 @@ pub struct Args {
 
 fn get_working_dir() -> String {
     match std::env::current_dir() {
-        Ok(x) => match x.to_str() {
-            Some(x) => x.to_string(),
-            None => String::from('.'),
-        },
+        Ok(x) => x.to_str().unwrap_or(".").to_string(),
         Err(_) => String::from('.'),
     }
 }

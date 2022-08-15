@@ -2,10 +2,8 @@ use crate::Error;
 use std::process::Command;
 
 pub fn branch_list(working_dir: &str) -> Result<Vec<String>, Error> {
-    match call_branch_list(working_dir) {
-        Ok(x) => Ok(parse_branches(&x)),
-        Err(e) => Err(e),
-    }
+    let git_output = call_branch_list(working_dir)?;
+    Ok(parse_branches(&git_output))
 }
 
 fn call_branch_list(working_dir: &str) -> Result<String, Error> {
@@ -21,7 +19,10 @@ fn call_branch_list(working_dir: &str) -> Result<String, Error> {
     if !output.status.success() {
         return Err(Error::Git(format!(
             "Error getting git branches: {}",
-            String::from_utf8(output.stderr).unwrap()
+            match String::from_utf8(output.stderr) {
+                Ok(x) => x,
+                Err(e) => return Err(Error::Git(format!("Could not decode git error: {}", e))),
+            }
         )));
     }
     match String::from_utf8(output.stdout) {
@@ -34,11 +35,7 @@ fn call_branch_list(working_dir: &str) -> Result<String, Error> {
 }
 
 fn clean_branch(branch: &str) -> &str {
-    match branch.trim().strip_prefix('*') {
-        Some(x) => x,
-        None => branch,
-    }
-    .trim()
+    branch.trim().strip_prefix('*').unwrap_or(branch).trim()
 }
 
 fn parse_branches(branch_list: &str) -> Vec<String> {

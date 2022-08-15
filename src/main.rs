@@ -7,7 +7,7 @@ fn main() {
     match select_and_print_branches(std::env::args(), std::io::stdout(), Term::stderr()) {
         Ok(_) => (),
         Err(e) => {
-            eprintln!("{}", e);
+            eprint!("{}", e);
             std::process::exit(1);
         }
     }
@@ -36,6 +36,8 @@ pub enum Error {
     Interactive(String),
     #[error("output error: {0}")]
     Write(String),
+    #[error("")]
+    Base,
 }
 
 fn select_branches(branches: &[String], terminal: &Term) -> Result<Option<Vec<String>>, Error> {
