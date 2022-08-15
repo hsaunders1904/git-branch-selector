@@ -3,8 +3,14 @@ use dialoguer::{console::Term, MultiSelect};
 mod cli;
 mod git;
 
-fn main() -> Result<(), Error> {
-    select_and_print_branches(std::env::args(), std::io::stdout(), Term::stderr())
+fn main() {
+    match select_and_print_branches(std::env::args(), std::io::stdout(), Term::stderr()) {
+        Ok(_) => (),
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        }
+    }
 }
 
 fn select_and_print_branches(
@@ -13,13 +19,7 @@ fn select_and_print_branches(
     terminal: Term,
 ) -> Result<(), Error> {
     let args = cli::parse_args(cli_args);
-    let branches = match git::branch_list(&args.git_dir) {
-        Ok(x) => x,
-        Err(e) => {
-            eprintln!("{}", e);
-            std::process::exit(1);
-        }
-    };
+    let branches = git::branch_list(&args.git_dir)?;
     let selected = match select_branches(&branches, &terminal)? {
         Some(x) => x,
         None => return Ok(()),
