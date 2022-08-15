@@ -1,18 +1,15 @@
-use dialoguer::{
-    console::Term,
-    theme::{SimpleTheme, Theme},
-    MultiSelect,
-};
+use dialoguer::{console::Term, theme::Theme, MultiSelect};
 
 mod cli;
 mod git;
+mod theme;
 
 fn main() {
     match select_and_print_branches(
         std::env::args(),
         std::io::stdout(),
         Term::stderr(),
-        SimpleTheme,
+        theme::GlyphTheme {},
     ) {
         Ok(_) => (),
         Err(e) => {
