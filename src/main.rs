@@ -1,10 +1,19 @@
-use dialoguer::{console::Term, MultiSelect};
+use dialoguer::{
+    console::Term,
+    theme::{SimpleTheme, Theme},
+    MultiSelect,
+};
 
 mod cli;
 mod git;
 
 fn main() {
-    match select_and_print_branches(std::env::args(), std::io::stdout(), Term::stderr()) {
+    match select_and_print_branches(
+        std::env::args(),
+        std::io::stdout(),
+        Term::stderr(),
+        SimpleTheme,
+    ) {
         Ok(_) => (),
         Err(e) => {
             eprint!("{}", e);
@@ -17,10 +26,11 @@ fn select_and_print_branches(
     cli_args: impl Iterator<Item = String>,
     writer: impl std::io::Write,
     terminal: Term,
+    theme: impl Theme,
 ) -> Result<(), Error> {
     let args = cli::parse_args(cli_args);
     let branches = git::branch_list(&args.git_dir)?;
-    let selected = match select_branches(&branches, &terminal)? {
+    let selected = match select_branches(&branches, &terminal, theme)? {
         Some(x) => x,
         None => return Ok(()),
     };
@@ -40,8 +50,15 @@ pub enum Error {
     Base,
 }
 
-fn select_branches(branches: &[String], terminal: &Term) -> Result<Option<Vec<String>>, Error> {
-    match MultiSelect::new().items(branches).interact_on_opt(terminal) {
+fn select_branches(
+    branches: &[String],
+    terminal: &Term,
+    theme: impl Theme,
+) -> Result<Option<Vec<String>>, Error> {
+    match MultiSelect::with_theme(&theme)
+        .items(branches)
+        .interact_on_opt(terminal)
+    {
         Ok(x) => match x {
             Some(choosen_idxs) => Ok(Some(
                 choosen_idxs
