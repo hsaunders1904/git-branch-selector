@@ -17,18 +17,17 @@ pub struct GbsTheme {
 impl Default for GbsTheme {
     fn default() -> GbsTheme {
         GbsTheme {
-            checked_item_prefix: style("✓".to_string()).for_stderr().green(),
+            checked_item_prefix: style("✓".to_string()).for_stderr().green().bright(),
             unchecked_item_prefix: style("✗".to_string()).for_stderr().white(),
             active_item_style: Style::new().for_stderr().cyan().bright(),
             inactive_item_style: Style::new().for_stderr().white(),
-            active_item_prefix: style(">".to_string()).for_stderr().white(),
-            inactive_item_prefix: style(" ".to_string()).for_stderr(),
+            active_item_prefix: style("> ".to_string()).for_stderr().white(),
+            inactive_item_prefix: style("  ".to_string()).for_stderr(),
         }
     }
 }
 
 impl Theme for GbsTheme {
-    /// Formats a multi select prompt item.
     fn format_multi_select_prompt_item(
         &self,
         f: &mut dyn fmt::Write,
