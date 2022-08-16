@@ -98,22 +98,22 @@ impl Default for GbsTheme {
     fn default() -> GbsTheme {
         GbsTheme {
             checked_item_prefix: StyledString {
-                value: Some("✓".to_string()),
-                foreground: Some("green".to_string()),
+                value: Some("[x]".to_string()),
+                foreground: None,
                 background: None,
-                fg_bright: true,
+                fg_bright: false,
                 bg_bright: false,
             },
             unchecked_item_prefix: StyledString {
-                value: Some("✗".to_string()),
-                foreground: Some("white".to_string()),
+                value: Some("[ ]".to_string()),
+                foreground: None,
                 background: None,
                 fg_bright: false,
                 bg_bright: false,
             },
             active_item_prefix: StyledString {
                 value: Some("> ".to_string()),
-                foreground: Some("white".to_string()),
+                foreground: None,
                 background: None,
                 fg_bright: false,
                 bg_bright: false,
@@ -126,13 +126,13 @@ impl Default for GbsTheme {
                 bg_bright: false,
             },
             active_item_style: Style {
-                foreground: Some("cyan".to_string()),
+                foreground: None,
                 background: None,
-                fg_bright: true,
+                fg_bright: false,
                 bg_bright: false,
             },
             inactive_item_style: Style {
-                foreground: Some("white".to_string()),
+                foreground: None,
                 background: None,
                 fg_bright: false,
                 bg_bright: false,
