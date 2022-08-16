@@ -19,10 +19,10 @@ impl Default for GbsTheme {
         GbsTheme {
             checked_item_prefix: style("✓".to_string()).for_stderr().green().bright(),
             unchecked_item_prefix: style("✗".to_string()).for_stderr().white(),
-            active_item_style: Style::new().for_stderr().cyan().bright(),
-            inactive_item_style: Style::new().for_stderr().white(),
             active_item_prefix: style("> ".to_string()).for_stderr().white(),
             inactive_item_prefix: style("  ".to_string()).for_stderr(),
+            active_item_style: Style::new().for_stderr().cyan().bright(),
+            inactive_item_style: Style::new().for_stderr().white(),
         }
     }
 }
