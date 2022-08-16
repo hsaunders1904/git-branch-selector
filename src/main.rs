@@ -9,7 +9,7 @@ fn main() {
         std::env::args(),
         std::io::stdout(),
         Term::stderr(),
-        theme::GlyphTheme {},
+        theme::GbsTheme::default(),
     ) {
         Ok(_) => (),
         Err(e) => {
