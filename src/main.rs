@@ -1,15 +1,29 @@
 use dialoguer::{console::Term, theme::Theme, MultiSelect};
 
 mod cli;
+mod config;
 mod git;
 mod theme;
 
 fn main() {
+    // let conf = match config::Config::from_toml_file(
+    //     "/home/bf2936/code/git-branch-selector/.scratch/config.toml",
+    // ) {
+    //     Err(e) => {
+    //         eprintln!("{}", e);
+    //         config::Config::default()
+    //     }
+    //     Ok(x) => x,
+    // };
+    let conf = config::Config::from_toml_file(
+        "/home/bf2936/code/git-branch-selector/.scratch/config.toml",
+    )
+    .unwrap_or_else(|_| config::Config::default());
     match select_and_print_branches(
         std::env::args(),
         std::io::stdout(),
         Term::stderr(),
-        theme::GbsTheme::default(),
+        conf.theme(),
     ) {
         Ok(_) => (),
         Err(e) => {
@@ -43,8 +57,8 @@ pub enum Error {
     Interactive(String),
     #[error("output error: {0}")]
     Write(String),
-    #[error("")]
-    Base,
+    #[error("config error: {0}")]
+    Config(String),
 }
 
 fn select_branches(

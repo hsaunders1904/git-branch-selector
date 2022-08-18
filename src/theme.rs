@@ -1,7 +1,6 @@
-use std::fmt;
-
 use dialoguer::{console, theme::Theme};
-use serde::Serialize;
+use serde::Deserialize;
+use std::fmt;
 
 fn to_color(color: &str) -> Option<console::Color> {
     match color {
@@ -17,11 +16,19 @@ fn to_color(color: &str) -> Option<console::Color> {
     }
 }
 
-#[derive(Serialize)]
+fn default_as_false() -> bool {
+    false
+}
+
+#[derive(Deserialize, Clone, Debug, Default)]
 pub struct Style {
+    #[serde(default)]
     foreground: Option<String>,
+    #[serde(default)]
     background: Option<String>,
+    #[serde(default = "default_as_false")]
     fg_bright: bool,
+    #[serde(default = "default_as_false")]
     bg_bright: bool,
 }
 
@@ -50,12 +57,17 @@ impl Style {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Deserialize, Clone, Debug, Default)]
 pub struct StyledString {
+    #[serde(default)]
     value: Option<String>,
+    #[serde(default)]
     foreground: Option<String>,
+    #[serde(default)]
     background: Option<String>,
+    #[serde(default = "default_as_false")]
     fg_bright: bool,
+    #[serde(default = "default_as_false")]
     bg_bright: bool,
 }
 
@@ -85,18 +97,27 @@ impl StyledString {
     }
 }
 
+#[derive(Deserialize, Clone, Debug)]
 pub struct GbsTheme {
+    pub name: String,
+    #[serde(default)]
     pub checked_item_prefix: StyledString,
+    #[serde(default)]
     pub unchecked_item_prefix: StyledString,
+    #[serde(default)]
     pub active_item_prefix: StyledString,
+    #[serde(default)]
     pub inactive_item_prefix: StyledString,
+    #[serde(default)]
     pub active_item_style: Style,
+    #[serde(default)]
     pub inactive_item_style: Style,
 }
 
 impl Default for GbsTheme {
     fn default() -> GbsTheme {
         GbsTheme {
+            name: "default".to_string(),
             checked_item_prefix: StyledString {
                 value: Some("[x]".to_string()),
                 foreground: None,
