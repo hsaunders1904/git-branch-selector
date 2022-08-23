@@ -3,15 +3,8 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[clap(author, version)]
 pub struct Args {
-    #[clap(value_parser, default_value_t = get_working_dir())]
+    #[clap(value_parser, default_value = ".")]
     pub git_dir: String,
-}
-
-fn get_working_dir() -> String {
-    match std::env::current_dir() {
-        Ok(x) => x.to_str().unwrap_or(".").to_string(),
-        Err(_) => String::from('.'),
-    }
 }
 
 pub fn parse_args(args: impl Iterator<Item = String>) -> Args {
@@ -44,13 +37,7 @@ mod tests {
 
             let args = parse_args(cli_args);
 
-            assert_eq!(
-                args.git_dir,
-                std::env::current_dir()
-                    .expect("Couldn't get working directory.")
-                    .to_str()
-                    .expect("Couldn't convert working directory to string.")
-            );
+            assert_eq!(args.git_dir, ".");
         }
     }
 }
