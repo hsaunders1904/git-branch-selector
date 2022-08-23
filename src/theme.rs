@@ -120,44 +120,22 @@ impl Default for GbsTheme {
             name: "default".to_string(),
             checked_item_prefix: StyledString {
                 value: Some("[x]".to_string()),
-                foreground: None,
-                background: None,
-                fg_bright: false,
-                bg_bright: false,
+                ..Default::default()
             },
             unchecked_item_prefix: StyledString {
                 value: Some("[ ]".to_string()),
-                foreground: None,
-                background: None,
-                fg_bright: false,
-                bg_bright: false,
+                ..Default::default()
             },
             active_item_prefix: StyledString {
                 value: Some("> ".to_string()),
-                foreground: None,
-                background: None,
-                fg_bright: false,
-                bg_bright: false,
+                ..Default::default()
             },
             inactive_item_prefix: StyledString {
                 value: Some("  ".to_string()),
-                foreground: None,
-                background: None,
-                fg_bright: false,
-                bg_bright: false,
+                ..Default::default()
             },
-            active_item_style: Style {
-                foreground: None,
-                background: None,
-                fg_bright: false,
-                bg_bright: false,
-            },
-            inactive_item_style: Style {
-                foreground: None,
-                background: None,
-                fg_bright: false,
-                bg_bright: false,
-            },
+            active_item_style: Style::default(),
+            inactive_item_style: Style::default(),
         }
     }
 }
@@ -194,5 +172,70 @@ impl Theme for GbsTheme {
         };
 
         write!(f, "{}{} {}", details.0, details.1, details.2)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    mod gbs_theme {
+        use super::super::*;
+
+        #[derive(Debug, Default)]
+        struct FakeWriter {
+            pub output: String,
+        }
+        impl std::fmt::Write for FakeWriter {
+            fn write_str(&mut self, s: &str) -> Result<(), std::fmt::Error> {
+                self.output += s;
+                Ok(())
+            }
+        }
+
+        #[test]
+        fn writes_output_according_to_theme() {
+            let theme = GbsTheme {
+                name: "tester".to_string(),
+                checked_item_prefix: StyledString {
+                    value: Some(" X ".to_string()),
+                    ..Default::default()
+                },
+                unchecked_item_prefix: StyledString {
+                    value: Some(" - ".to_string()),
+                    ..Default::default()
+                },
+                active_item_prefix: StyledString {
+                    value: Some(">".to_string()),
+                    ..Default::default()
+                },
+                inactive_item_prefix: StyledString {
+                    value: Some(".".to_string()),
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+            let mut writer = FakeWriter::default();
+
+            theme
+                .format_multi_select_prompt_item(&mut writer, "unchecked inactive", false, false)
+                .unwrap();
+            writer.output += "\n";
+            theme
+                .format_multi_select_prompt_item(&mut writer, "checked inactive", true, false)
+                .unwrap();
+            writer.output += "\n";
+            theme
+                .format_multi_select_prompt_item(&mut writer, "unchecked active", false, true)
+                .unwrap();
+            writer.output += "\n";
+            theme
+                .format_multi_select_prompt_item(&mut writer, "checked active", true, true)
+                .unwrap();
+
+            let expected = ". -  unchecked inactive\n\
+            . X  checked inactive\n\
+            > -  unchecked active\n\
+            > X  checked active";
+            assert_eq!(writer.output, expected);
+        }
     }
 }
