@@ -20,16 +20,16 @@ fn default_as_false() -> bool {
     false
 }
 
-#[derive(Deserialize, Clone, Debug, Default)]
+#[derive(Deserialize, Clone, Debug, Default, PartialEq)]
 pub struct Style {
     #[serde(default)]
-    foreground: Option<String>,
+    pub foreground: Option<String>,
     #[serde(default)]
-    background: Option<String>,
+    pub background: Option<String>,
     #[serde(default = "default_as_false")]
-    fg_bright: bool,
+    pub fg_bright: bool,
     #[serde(default = "default_as_false")]
-    bg_bright: bool,
+    pub bg_bright: bool,
 }
 
 impl Style {
@@ -57,18 +57,18 @@ impl Style {
     }
 }
 
-#[derive(Deserialize, Clone, Debug, Default)]
+#[derive(Deserialize, Clone, Debug, Default, PartialEq)]
 pub struct StyledString {
     #[serde(default)]
-    value: Option<String>,
+    pub value: Option<String>,
     #[serde(default)]
-    foreground: Option<String>,
+    pub foreground: Option<String>,
     #[serde(default)]
-    background: Option<String>,
+    pub background: Option<String>,
     #[serde(default = "default_as_false")]
-    fg_bright: bool,
+    pub fg_bright: bool,
     #[serde(default = "default_as_false")]
-    bg_bright: bool,
+    pub bg_bright: bool,
 }
 
 impl StyledString {
@@ -97,7 +97,7 @@ impl StyledString {
     }
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, PartialEq)]
 pub struct GbsTheme {
     pub name: String,
     #[serde(default)]
