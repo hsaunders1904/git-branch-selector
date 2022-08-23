@@ -20,7 +20,7 @@ fn default_as_false() -> bool {
     false
 }
 
-#[derive(Deserialize, Clone, Debug, Default, PartialEq)]
+#[derive(Deserialize, Clone, Debug, Default, Eq, PartialEq)]
 pub struct Style {
     #[serde(default)]
     pub foreground: Option<String>,
@@ -57,7 +57,7 @@ impl Style {
     }
 }
 
-#[derive(Deserialize, Clone, Debug, Default, PartialEq)]
+#[derive(Deserialize, Clone, Debug, Default, Eq, PartialEq)]
 pub struct StyledString {
     #[serde(default)]
     pub value: Option<String>,
@@ -97,7 +97,7 @@ impl StyledString {
     }
 }
 
-#[derive(Deserialize, Clone, Debug, PartialEq)]
+#[derive(Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct GbsTheme {
     pub name: String,
     #[serde(default)]

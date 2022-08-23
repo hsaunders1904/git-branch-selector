@@ -40,7 +40,9 @@ fn select_and_print_branches(
     theme: impl Theme,
 ) -> Result<(), Error> {
     let args = cli::parse_args(cli_args);
-    let branches = git::branch_list(&args.git_dir)?;
+    let branches = git::branch_list(git::GitBranchOutputter {
+        working_dir: args.git_dir,
+    })?;
     let selected = match select_branches(&branches, &terminal, theme)? {
         Some(x) => x,
         None => return Ok(()),
@@ -49,7 +51,7 @@ fn select_and_print_branches(
     Ok(())
 }
 
-#[derive(thiserror::Error, Debug, PartialEq)]
+#[derive(thiserror::Error, Debug, Eq, PartialEq)]
 pub enum Error {
     #[error("config error: {0}")]
     Config(String),
