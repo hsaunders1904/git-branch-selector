@@ -49,16 +49,16 @@ fn select_and_print_branches(
     Ok(())
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, PartialEq)]
 pub enum Error {
+    #[error("config error: {0}")]
+    Config(String),
     #[error("git error: {0}")]
     Git(String),
     #[error("user input error: {0}")]
     Interactive(String),
     #[error("output error: {0}")]
     Write(String),
-    #[error("config error: {0}")]
-    Config(String),
 }
 
 fn select_branches(
