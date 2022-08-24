@@ -1,8 +1,73 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 
 use crate::theme::GbsTheme;
+use crate::Error;
 
-#[derive(Deserialize, Debug)]
+const COULD_NOT_CREATE: &str = "could not create config file";
+const COULD_NOT_DIR: &str = "could not create directory";
+const COULD_NOT_OPEN: &str = "could not open config file";
+const COULD_NOT_PARSE: &str = "could not parse config file";
+const COULD_NOT_READ: &str = "could not parse config file";
+const COULD_NOT_WRITE: &str = "could not write config file";
+
+pub fn init_config() -> Result<Config, Error> {
+    let file_path = match config_path() {
+        Some(x) => x,
+        None => return Err(Error::Config("could not build config path.".to_string())),
+    };
+    make_dir_if_not_exist(file_path.parent().unwrap())?;
+    let mut file: File;
+    if !file_path.exists() {
+        file = match File::create(&file_path) {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(Error::Config(format!(
+                    "{} '{}': {}",
+                    COULD_NOT_CREATE,
+                    file_path.to_string_lossy().to_owned(),
+                    e
+                )))
+            }
+        };
+        let default_config = Config::default();
+        if let Err(e) = write!(&mut file, "{}", default_config.to_toml()?) {
+            return Err(Error::Config(format!("{}: {}", COULD_NOT_WRITE, e)));
+        };
+        Ok(default_config)
+    } else {
+        file = match File::open(file_path) {
+            Ok(x) => x,
+            Err(e) => return Err(Error::Config(format!("{}: {}", COULD_NOT_OPEN, e))),
+        };
+        Ok(Config::from_toml(&mut file)?)
+    }
+}
+
+fn config_path() -> Option<PathBuf> {
+    let dirs = directories::BaseDirs::new();
+    let config_dir = match dirs {
+        Some(x) => x.config_dir().to_owned(),
+        None => return None,
+    };
+    Some(config_dir.join("git-branch-selector").join("config.toml"))
+}
+
+fn make_dir_if_not_exist(dir: &Path) -> Result<(), Error> {
+    match std::fs::create_dir_all(dir) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(Error::Config(format!(
+            "{} '{}': {}",
+            COULD_NOT_DIR,
+            dir.to_string_lossy().to_owned(),
+            e
+        ))),
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug)]
 pub struct BaseConfig {
     theme: String,
 }
@@ -15,7 +80,7 @@ impl Default for BaseConfig {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Config {
     pub base: BaseConfig,
     pub themes: Vec<GbsTheme>,
@@ -38,6 +103,24 @@ impl Config {
             }
         }
         GbsTheme::default()
+    }
+
+    pub fn to_toml(&self) -> Result<String, Error> {
+        match toml::to_string(self) {
+            Ok(x) => Ok(x),
+            Err(e) => Err(Error::Config(format!("could not serialize config: {}", e))),
+        }
+    }
+
+    pub fn from_toml(reader: &mut impl Read) -> Result<Config, Error> {
+        let mut toml_str = String::new();
+        if let Err(e) = reader.read_to_string(&mut toml_str) {
+            return Err(Error::Config(format!("{}: {}", COULD_NOT_READ, e)));
+        };
+        match toml::from_str(&toml_str) {
+            Ok(config) => Ok(config),
+            Err(e) => Err(Error::Config(format!("{}: {}", COULD_NOT_PARSE, e))),
+        }
     }
 }
 
