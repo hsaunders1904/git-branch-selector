@@ -18,21 +18,8 @@ pub enum Error {
 }
 
 fn main() {
-    // let conf = match config::Config::from_toml_file(
-    //     "/home/bf2936/code/git-branch-selector/.scratch/config.toml",
-    // ) {
-    //     Err(e) => {
-    //         eprintln!("{}", e);
-    //         config::Config::default()
-    //     }
-    //     Ok(x) => x,
-    // };
-    let conf = config::Config::from_toml_file(
-        "/home/bf2936/code/git-branch-selector/.scratch/config.toml",
-    )
-    .unwrap_or_else(|_| config::Config::default());
+    let conf = config::Config::default();
     let args = cli::parse_args(std::env::args());
-
     let branch_outputter = git::GitBranchOutputter {
         working_dir: args.git_dir,
     };
