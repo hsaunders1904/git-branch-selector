@@ -7,13 +7,13 @@ mod theme;
 
 #[derive(thiserror::Error, Debug, Eq, PartialEq)]
 pub enum Error {
-    #[error("Error processing config: {0}")]
+    #[error("config error: {0}")]
     Config(String),
-    #[error("Git process failed: {0}")]
+    #[error("git error: {0}")]
     Git(String),
-    #[error("Error getting user input: {0}")]
-    Interactive(String),
-    #[error("Error writing to output: {0}")]
+    #[error("input error: {0}")]
+    Input(String),
+    #[error("output error: {0}")]
     Write(String),
 }
 
@@ -67,7 +67,7 @@ impl Selector for InteractiveBranchSelector {
                     .collect::<Vec<_>>()),
                 None => Ok(vec![]),
             },
-            Err(e) => Err(Error::Interactive(e.to_string())),
+            Err(e) => Err(Error::Input(e.to_string())),
         }
     }
 }
