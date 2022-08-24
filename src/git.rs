@@ -1,31 +1,51 @@
 use crate::Error;
 use std::process::Command;
 
-pub fn branch_list(working_dir: &str) -> Result<Vec<String>, Error> {
-    let git_output = call_branch_list(working_dir)?;
-    Ok(parse_branches(&git_output))
+pub fn branch_list(outputter: impl Outputter) -> Result<Vec<String>, Error> {
+    let (success, stdout, stderr) = outputter.get_output()?;
+    match check_output(success, stdout, stderr) {
+        Ok(x) => Ok(parse_branches(&x)),
+        Err(e) => Err(e),
+    }
 }
 
-fn call_branch_list(working_dir: &str) -> Result<String, Error> {
-    let output = match Command::new("git")
-        .arg("branch")
-        .arg("--list")
-        .current_dir(working_dir)
-        .output()
-    {
-        Ok(x) => x,
-        Err(e) => return Err(Error::Git(e.to_string())),
-    };
-    if !output.status.success() {
+pub trait Outputter {
+    fn get_output(&self) -> Result<(bool, Vec<u8>, Vec<u8>), Error>;
+}
+
+pub struct GitBranchOutputter {
+    pub working_dir: String,
+}
+
+impl Outputter for GitBranchOutputter {
+    fn get_output(&self) -> Result<(bool, Vec<u8>, Vec<u8>), Error> {
+        match Command::new("git")
+            .arg("branch")
+            .arg("--list")
+            .current_dir(&self.working_dir)
+            .output()
+        {
+            Ok(x) => Ok((x.status.success(), x.stdout, x.stderr)),
+            Err(e) => Err(Error::Git(e.to_string())),
+        }
+    }
+}
+
+fn check_output(success: bool, stdout: Vec<u8>, stderr: Vec<u8>) -> Result<String, Error> {
+    if !success {
         return Err(Error::Git(format!(
             "Error getting git branches: {}",
-            match String::from_utf8(output.stderr) {
+            match String::from_utf8(stderr) {
                 Ok(x) => x,
-                Err(e) => return Err(Error::Git(format!("Could not decode git error: {}", e))),
+                Err(e) =>
+                    return Err(Error::Git(format!(
+                        "Could not decode git branch output: {}",
+                        e
+                    ))),
             }
         )));
     }
-    match String::from_utf8(output.stdout) {
+    match String::from_utf8(stdout) {
         Ok(x) => Ok(x),
         Err(e) => Err(Error::Git(format!(
             "Could not decode git branch output: {}",
@@ -49,62 +69,89 @@ fn parse_branches(branch_list: &str) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    mod parse_branches {
+    mod branch_list {
         use super::super::*;
 
+        struct FakeOutputter {
+            success: bool,
+            stdout: Vec<u8>,
+            stderr: Vec<u8>,
+        }
+
+        impl Outputter for FakeOutputter {
+            fn get_output(&self) -> Result<(bool, Vec<u8>, Vec<u8>), Error> {
+                Ok((self.success, self.stdout.clone(), self.stderr.clone()))
+            }
+        }
+
         #[test]
-        fn returns_all_listed() {
-            let branches_str = "  hsaunders1904/branch1
-        * main
-          branch3
-          _some-branch";
+        fn parses_list_of_branches() {
+            let outputter = FakeOutputter {
+                success: true,
+                stdout: " main\n* develop  \n \n   other/branch\n"
+                    .as_bytes()
+                    .to_vec(),
+                stderr: "".as_bytes().to_vec(),
+            };
 
-            let mut branches = parse_branches(branches_str);
+            let mut branches = branch_list(outputter).unwrap();
 
-            // Sort as we don't care about order
             branches.sort();
-            let expected = vec!["_some-branch", "branch3", "hsaunders1904/branch1", "main"];
-            assert_eq!(branches, expected);
+            assert_eq!(branches, vec!["develop", "main", "other/branch"]);
         }
 
         #[test]
-        fn ignores_empty_lines() {
-            let branches_str = "
-        hsaunders1904/branch1
+        fn error_if_outputter_does_not_succeed() {
+            let outputter = FakeOutputter {
+                success: false,
+                stdout: "".as_bytes().to_vec(),
+                stderr: "error message".as_bytes().to_vec(),
+            };
 
-        * main
+            let branches = branch_list(outputter);
 
-          branch3
-
-
-          _some-branch
-          ";
-
-            let mut branches = parse_branches(branches_str);
-
-            // Sort as we don't care about order
-            branches.sort();
-            let expected = vec!["_some-branch", "branch3", "hsaunders1904/branch1", "main"];
-            assert_eq!(branches, expected);
-        }
-    }
-
-    mod clean_branch {
-        use super::super::*;
-
-        #[test]
-        fn removes_whitespace_from_beginning_and_end() {
-            assert_eq!(clean_branch("  some branch   "), "some branch");
+            assert!(branches.is_err());
+            assert!(branches.unwrap_err().to_string().contains("error message"));
         }
 
         #[test]
-        fn removes_asterisk_from_beginning() {
-            assert_eq!(clean_branch("* some branch*"), "some branch*");
+        fn error_if_output_not_valid_utf8() {
+            let outputter = FakeOutputter {
+                success: true,
+                stdout: vec![240, 40, 140, 188], // \xf0\x28\x8c\xbc
+                stderr: "error message".as_bytes().to_vec(),
+            };
+
+            let branches = branch_list(outputter);
+
+            assert!(branches.is_err());
+            let err = branches.unwrap_err();
+            assert!(
+                err.to_string()
+                    .contains("Could not decode git branch output"),
+                "{}",
+                err
+            );
         }
 
         #[test]
-        fn removes_whitespace_and_asterisk_from_beginning() {
-            assert_eq!(clean_branch(" * some branch"), "some branch");
+        fn error_if_output_fails_with_not_valid_utf8() {
+            let outputter = FakeOutputter {
+                success: false,
+                stdout: "".as_bytes().to_vec(),
+                stderr: vec![240, 40, 140, 188], // \xf0\x28\x8c\xbc
+            };
+
+            let branches = branch_list(outputter);
+
+            assert!(branches.is_err());
+            let err = branches.unwrap_err();
+            assert!(
+                err.to_string()
+                    .contains("Could not decode git branch output"),
+                "{}",
+                err
+            );
         }
     }
 }
