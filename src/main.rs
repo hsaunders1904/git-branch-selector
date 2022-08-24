@@ -1,9 +1,21 @@
-use dialoguer::{console::Term, theme::Theme, MultiSelect};
+use dialoguer::MultiSelect;
 
 mod cli;
 mod config;
 mod git;
 mod theme;
+
+#[derive(thiserror::Error, Debug, Eq, PartialEq)]
+pub enum Error {
+    #[error("Error processing config: {0}")]
+    Config(String),
+    #[error("Git process failed: {0}")]
+    Git(String),
+    #[error("Error getting user input: {0}")]
+    Interactive(String),
+    #[error("Error writing to output: {0}")]
+    Write(String),
+}
 
 fn main() {
     // let conf = match config::Config::from_toml_file(
@@ -19,12 +31,15 @@ fn main() {
         "/home/bf2936/code/git-branch-selector/.scratch/config.toml",
     )
     .unwrap_or_else(|_| config::Config::default());
-    match select_and_print_branches(
-        std::env::args(),
-        std::io::stdout(),
-        Term::stderr(),
-        conf.theme(),
-    ) {
+    let args = cli::parse_args(std::env::args());
+
+    let branch_outputter = git::GitBranchOutputter {
+        working_dir: args.git_dir,
+    };
+    let branch_selector = InteractiveBranchSelector {
+        theme: conf.theme(),
+    };
+    match select_and_print_branches(branch_outputter, std::io::stdout(), branch_selector) {
         Ok(_) => (),
         Err(e) => {
             eprint!("{}", e);
@@ -34,54 +49,39 @@ fn main() {
 }
 
 fn select_and_print_branches(
-    cli_args: impl Iterator<Item = String>,
+    branch_outputter: impl git::Outputter,
     writer: impl std::io::Write,
-    terminal: Term,
-    theme: impl Theme,
+    branch_selector: impl Selector,
 ) -> Result<(), Error> {
-    let args = cli::parse_args(cli_args);
-    let branches = git::branch_list(git::GitBranchOutputter {
-        working_dir: args.git_dir,
-    })?;
-    let selected = match select_branches(&branches, &terminal, theme)? {
-        Some(x) => x,
-        None => return Ok(()),
-    };
+    let branches = git::branch_list(branch_outputter)?;
+    let selected = branch_selector.select(&branches)?;
     write_branches(&selected, writer)?;
     Ok(())
 }
 
-#[derive(thiserror::Error, Debug, Eq, PartialEq)]
-pub enum Error {
-    #[error("config error: {0}")]
-    Config(String),
-    #[error("git error: {0}")]
-    Git(String),
-    #[error("user input error: {0}")]
-    Interactive(String),
-    #[error("output error: {0}")]
-    Write(String),
+pub trait Selector {
+    fn select(&self, options: &[String]) -> Result<Vec<String>, Error>;
 }
 
-fn select_branches(
-    branches: &[String],
-    terminal: &Term,
-    theme: impl Theme,
-) -> Result<Option<Vec<String>>, Error> {
-    match MultiSelect::with_theme(&theme)
-        .items(branches)
-        .interact_on_opt(terminal)
-    {
-        Ok(x) => match x {
-            Some(choosen_idxs) => Ok(Some(
-                choosen_idxs
+struct InteractiveBranchSelector {
+    theme: theme::GbsTheme,
+}
+
+impl Selector for InteractiveBranchSelector {
+    fn select(&self, options: &[String]) -> Result<Vec<String>, Error> {
+        match MultiSelect::with_theme(&self.theme)
+            .items(options)
+            .interact_opt()
+        {
+            Ok(x) => match x {
+                Some(choosen_idxs) => Ok(choosen_idxs
                     .iter()
-                    .map(|i| branches[*i].to_owned())
-                    .collect::<Vec<_>>(),
-            )),
-            None => Ok(None),
-        },
-        Err(e) => Err(Error::Interactive(e.to_string())),
+                    .map(|i| options[*i].to_owned())
+                    .collect::<Vec<_>>()),
+                None => Ok(vec![]),
+            },
+            Err(e) => Err(Error::Interactive(e.to_string())),
+        }
     }
 }
 
@@ -99,22 +99,50 @@ fn write_branches(branches: &[String], mut writer: impl std::io::Write) -> Resul
 
 #[cfg(test)]
 mod tests {
-    mod write_branches {
+    mod select_and_print_branches {
+        use super::super::*;
+        use crate::git::Outputter;
 
-        use crate::write_branches;
+        struct FakeOutputter {
+            success: bool,
+            stdout: String,
+            stderr: String,
+        }
+        impl Outputter for FakeOutputter {
+            fn get_output(&self) -> Result<(bool, Vec<u8>, Vec<u8>), Error> {
+                Ok((
+                    self.success,
+                    self.stdout.as_bytes().to_vec(),
+                    self.stderr.as_bytes().to_vec(),
+                ))
+            }
+        }
+
+        struct FakeSelector {
+            selection: Vec<String>,
+        }
+        impl Selector for FakeSelector {
+            fn select(&self, _: &[String]) -> Result<Vec<String>, Error> {
+                Ok(self.selection.clone())
+            }
+        }
 
         #[test]
-        fn delimits_branches_with_space() {
-            let branches = vec![
-                "a".to_string(),
-                "branch".to_string(),
-                "c/branch".to_string(),
-            ];
+        fn prints_selected_branches() {
+            let outputter = FakeOutputter {
+                success: true,
+                stdout: "main\n*develop\nfeature/123\n".to_string(),
+                stderr: "".to_string(),
+            };
+            let selector = FakeSelector {
+                selection: vec!["main".to_string(), "feature/123".to_string()],
+            };
             let mut writer = Vec::new();
 
-            write_branches(&branches, &mut writer).unwrap();
+            let result = select_and_print_branches(outputter, &mut writer, selector);
 
-            assert_eq!(writer, b"a branch c/branch");
+            assert!(result.is_ok());
+            assert_eq!(writer, b"main feature/123");
         }
     }
 }
