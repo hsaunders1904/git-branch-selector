@@ -14,15 +14,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Static Analysis
-        run: |
-          pip install pre-commit
-          pre-commit install
-          pre-commit run --all-files
-
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
 
+      # - name: Static Analysis
+      #   run: |
+      #     apt update
+      #     apt install python3 python3-pip -y
+      #     pip install pre-commit
+      #     pre-commit install
+      #     pre-commit run --all-files
+
       - name: Build & Test
-        run: cargo test --release --all-features
+        run: |
+          cargo install cargo-tarpaulin
+          cargo tarpaulin --out Xml
+          ls
