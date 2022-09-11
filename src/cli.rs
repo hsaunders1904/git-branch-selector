@@ -3,9 +3,9 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[clap(author, version)]
 pub struct Args {
-    #[clap(value_parser, default_value = ".")]
+    #[clap(value_parser, default_value = ".", help = "Path to git repository")]
     pub git_dir: String,
-    #[clap(long, action)]
+    #[clap(long, action, help = "Print the path to the configuration file")]
     pub config: bool,
 }
 
