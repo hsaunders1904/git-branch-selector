@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/hsaunders1904/git-branch-selector/tree/main/docs/config_schema.json",
+    "$id": "https://raw.githubusercontent.com/hsaunders1904/git-branch-selector/main/docs/config_schema.json",
     "title": "git-branch-selector config",
     "description": "Schema for git-branch-selector's config file.",
     "type": "object",
