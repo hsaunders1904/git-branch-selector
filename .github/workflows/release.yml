@@ -24,6 +24,8 @@ jobs:
           cargo-deb
 
       - name: Make release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           deb_rel=$(ls target/debian/*.deb)
           gh release create "${{ steps.validate.get-version.version }}" \
