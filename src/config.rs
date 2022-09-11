@@ -12,6 +12,9 @@ const COULD_NOT_OPEN: &str = "could not open config file";
 const COULD_NOT_PARSE: &str = "could not parse config file";
 const COULD_NOT_READ: &str = "could not parse config file";
 const COULD_NOT_WRITE: &str = "could not write config file";
+const CONFIG_DIR_NAME: &str = "git-branch-selector";
+const CONFIG_FILE_NAME: &str = "config";
+const CONFIG_FILE_EXT: &str = "json";
 
 pub fn init_config() -> Result<Config, Error> {
     let file_path = match config_path() {
@@ -33,7 +36,7 @@ pub fn init_config() -> Result<Config, Error> {
             }
         };
         let default_config = Config::default();
-        if let Err(e) = write!(&mut file, "{}", default_config.to_toml()?) {
+        if let Err(e) = write!(&mut file, "{}", default_config.to_json()?) {
             return Err(Error::Config(format!("{}: {}", COULD_NOT_WRITE, e)));
         };
         Ok(default_config)
@@ -52,7 +55,11 @@ fn config_path() -> Option<PathBuf> {
         Some(x) => x.config_dir().to_owned(),
         None => return None,
     };
-    Some(config_dir.join("git-branch-selector").join("config.toml"))
+    Some(
+        config_dir
+            .join(CONFIG_DIR_NAME)
+            .join(format!("{}.{}", CONFIG_FILE_NAME, CONFIG_FILE_EXT)),
+    )
 }
 
 fn make_dir_if_not_exist(dir: &Path) -> Result<(), Error> {
@@ -105,8 +112,8 @@ impl Config {
         GbsTheme::default()
     }
 
-    pub fn to_toml(&self) -> Result<String, Error> {
-        match toml::to_string(self) {
+    pub fn to_json(&self) -> Result<String, Error> {
+        match serde_json::to_string_pretty(self) {
             Ok(x) => Ok(x),
             Err(e) => Err(Error::Config(format!("could not serialize config: {}", e))),
         }
@@ -117,7 +124,7 @@ impl Config {
         if let Err(e) = reader.read_to_string(&mut toml_str) {
             return Err(Error::Config(format!("{}: {}", COULD_NOT_READ, e)));
         };
-        match toml::from_str(&toml_str) {
+        match serde_json::from_str(&toml_str) {
             Ok(config) => Ok(config),
             Err(e) => Err(Error::Config(format!("{}: {}", COULD_NOT_PARSE, e))),
         }
