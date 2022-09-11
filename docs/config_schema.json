@@ -1,0 +1,215 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/hsaunders1904/git-branch-selector/tree/main/docs/config_schema.json",
+    "title": "git-branch-selector config",
+    "description": "Schema for git-branch-selector's config file.",
+    "type": "object",
+    "properties": {
+        "base": {
+            "type": "object",
+            "description": "base config",
+            "properties": {
+                "theme": {
+                    "type": "string",
+                    "description": "The name of the theme to use."
+                }
+            },
+            "required": [
+                "theme"
+            ]
+        },
+        "themes": {
+            "description": "Array of themes to choose from.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the theme"
+                    },
+                    "checked_item_prefix": {
+                        "type": "object",
+                        "properties": {
+                            "value": {
+                                "type": "string"
+                            },
+                            "foreground": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "The colour of the text."
+                            },
+                            "background": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "The colour of the background."
+                            },
+                            "fg_bright": {
+                                "type": "boolean",
+                                "description": "Make the text colour bright."
+                            },
+                            "bg_bright": {
+                                "type": "boolean",
+                                "description": "Make the background bright."
+                            }
+                        }
+                    },
+                    "unchecked_item_prefix": {
+                        "type": "object",
+                        "properties": {
+                            "value": {
+                                "type": "string"
+                            },
+                            "foreground": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "The colour of the text."
+                            },
+                            "background": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "The colour of the background."
+                            },
+                            "fg_bright": {
+                                "type": "boolean",
+                                "description": "Make the text colour bright."
+                            },
+                            "bg_bright": {
+                                "type": "boolean",
+                                "description": "Make the background bright."
+                            }
+                        }
+                    },
+                    "active_item_prefix": {
+                        "type": "object",
+                        "properties": {
+                            "properties": {
+                                "value": {
+                                    "type": "string"
+                                },
+                                "foreground": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "description": "The colour of the text."
+                                },
+                                "background": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "description": "The colour of the background."
+                                },
+                                "fg_bright": {
+                                    "type": "boolean",
+                                    "description": "Make the text colour bright."
+                                },
+                                "bg_bright": {
+                                    "type": "boolean",
+                                    "description": "Make the background bright."
+                                }
+                            }
+                        }
+                    },
+                    "inactive_item_prefix": {
+                        "type": "object",
+                        "properties": {
+                            "value": {
+                                "type": "string"
+                            },
+                            "foreground": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "The colour of the text."
+                            },
+                            "background": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "The colour of the background."
+                            },
+                            "fg_bright": {
+                                "type": "boolean",
+                                "description": "Make the text colour bright."
+                            },
+                            "bg_bright": {
+                                "type": "boolean",
+                                "description": "Make the background bright."
+                            }
+                        }
+                    },
+                    "active_item_style": {
+                        "type": "object",
+                        "properties": {
+                            "foreground": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "The colour of the text."
+                            },
+                            "background": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "The colour of the background."
+                            },
+                            "fg_bright": {
+                                "type": "boolean",
+                                "description": "Make the text colour bright."
+                            },
+                            "bg_bright": {
+                                "type": "boolean",
+                                "description": "Make the background bright."
+                            }
+                        }
+                    },
+                    "inactive_item_style": {
+                        "type": "object",
+                        "properties": {
+                            "foreground": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "The colour of the text."
+                            },
+                            "background": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "The colour of the background."
+                            },
+                            "fg_bright": {
+                                "type": "boolean",
+                                "description": "Make the text colour bright."
+                            },
+                            "bg_bright": {
+                                "type": "boolean",
+                                "description": "Make the background bright."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "required": [
+        "base",
+        "themes"
+    ]
+}
