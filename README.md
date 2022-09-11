@@ -8,6 +8,11 @@ Use within pipes to perform commands on multiple git branches.
 To interactively select branches and print your selection,
 use the `bselect` (for 'branch-select') executable without any arguments.
 
+Use the `Up`/`Down` arrow keys to navigate branch selection.
+Use `Space` to select/deselect an entry,
+`Enter` to confirm the selection,
+or press `Q` or `Esc` to exit without action.
+
 Use in conjunction with `xargs`
 (or [command substitution](https://www.gnu.org/software/bash/manual/html_node/Command-Substitution.html))
 to perform operations on selected branches.
