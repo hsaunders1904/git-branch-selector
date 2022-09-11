@@ -31,4 +31,4 @@ jobs:
           gh release create "${{ steps.get-version.outputs.version }}" \
             ${deb_rel} \
             --target main \
-            --title "git-branch-selector: ${{ steps.validate.get-version.version }}"
+            --title "git-branch-selector: ${{ steps.get-version.outputs.version }}"
