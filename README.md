@@ -9,19 +9,19 @@ multiple git branches.
 To print your selection of branches
 
 ```console
-gbs
+bs
 ```
 
 To delete your selection of branches
 
 ```console
-gbs | xargs git branch -d
+bs | xargs git branch -d
 ```
 
 or
 
 ```console
-git branch -d $(gbs)
+git branch -d $(bs)
 ```
 
 ## Build, Install, and Test
