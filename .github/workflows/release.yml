@@ -28,7 +28,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           deb_rel=$(ls target/debian/*.deb)
-          gh release create "${{ steps.validate.get-version.version }}" \
+          gh release create "${{ steps.get-version.outputs.version }}" \
             ${deb_rel} \
             --target main \
             --title "git-branch-selector: ${{ steps.validate.get-version.version }}"
