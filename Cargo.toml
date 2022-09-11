@@ -1,13 +1,17 @@
 [package]
 name = "git-branch-selector"
 version = "0.1.0"
+authors = ["hsaunders1904 <33317174+hsaunders1904@users.noreply.github.com>"]
 edition = "2021"
+readme = "README.md"
+repository = "https://github.com/hsaunders1904/git-branch-selector"
+license = "GPL-3.0-or-later"
+keywords = ["git", "console"]
+categories = ["command-line-utilities"]
 
 [[bin]]
 name = "bselect"
 path = "src/main.rs"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 clap = { version = "3.2.17", features = ["derive"] }
