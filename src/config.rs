@@ -49,7 +49,7 @@ pub fn init_config() -> Result<Config, Error> {
     }
 }
 
-fn config_path() -> Option<PathBuf> {
+pub fn config_path() -> Option<PathBuf> {
     let dirs = directories::BaseDirs::new();
     let config_dir = match dirs {
         Some(x) => x.config_dir().to_owned(),

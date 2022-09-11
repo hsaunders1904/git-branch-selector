@@ -18,11 +18,21 @@ pub enum Error {
 }
 
 fn main() {
+    let args = cli::parse_args(std::env::args());
+    if args.config {
+        match print_config_path() {
+            Ok(_) => std::process::exit(0),
+            Err(e) => {
+                eprint!("{}", e);
+                std::process::exit(1);
+            }
+        }
+    }
+
     let conf = config::init_config().unwrap_or_else(|e| {
         eprint!("{}", e);
         std::process::exit(1)
     });
-    let args = cli::parse_args(std::env::args());
     let branch_outputter = git::GitBranchOutputter {
         working_dir: args.git_dir,
     };
@@ -49,7 +59,17 @@ fn select_and_print_branches(
     Ok(())
 }
 
-pub trait Selector {
+fn print_config_path() -> Result<(), Error> {
+    match config::config_path() {
+        Some(x) => {
+            println!("{}", x.to_string_lossy());
+            Ok(())
+        }
+        None => Err(Error::Config("could not build config path.".to_string())),
+    }
+}
+
+trait Selector {
     fn select(&self, options: &[String]) -> Result<Vec<String>, Error>;
 }
 

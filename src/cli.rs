@@ -5,6 +5,8 @@ use clap::Parser;
 pub struct Args {
     #[clap(value_parser, default_value = ".")]
     pub git_dir: String,
+    #[clap(long, action)]
+    pub config: bool,
 }
 
 pub fn parse_args(args: impl Iterator<Item = String>) -> Args {
@@ -38,6 +40,24 @@ mod tests {
             let args = parse_args(cli_args);
 
             assert_eq!(args.git_dir, ".");
+        }
+
+        #[test]
+        fn config_false_by_default() {
+            let cli_args = to_string_iter!([""]);
+
+            let args = parse_args(cli_args);
+
+            assert!(!args.config);
+        }
+
+        #[test]
+        fn config_true_given_flag() {
+            let cli_args = to_string_iter!(["", "--config"]);
+
+            let args = parse_args(cli_args);
+
+            assert!(args.config);
         }
     }
 }
