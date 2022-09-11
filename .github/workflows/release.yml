@@ -2,11 +2,6 @@ name: git-branch-selector release
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        type: string
-        description: "Version string"
-        required: true
 
 jobs:
   ubuntu:
