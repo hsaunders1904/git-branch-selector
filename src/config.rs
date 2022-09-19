@@ -45,7 +45,7 @@ pub fn init_config() -> Result<Config, Error> {
             Ok(x) => x,
             Err(e) => return Err(Error::Config(format!("{}: {}", COULD_NOT_OPEN, e))),
         };
-        Ok(Config::from_toml(&mut file)?)
+        Ok(Config::from_json(&mut file)?)
     }
 }
 
@@ -119,7 +119,7 @@ impl Config {
         }
     }
 
-    pub fn from_toml(reader: &mut impl Read) -> Result<Config, Error> {
+    pub fn from_json(reader: &mut impl Read) -> Result<Config, Error> {
         let mut toml_str = String::new();
         if let Err(e) = reader.read_to_string(&mut toml_str) {
             return Err(Error::Config(format!("{}: {}", COULD_NOT_READ, e)));
