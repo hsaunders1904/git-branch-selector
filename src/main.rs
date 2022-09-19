@@ -30,7 +30,7 @@ fn main() {
     }
 
     let conf = config::init_config().unwrap_or_else(|e| {
-        eprint!("{}", e);
+        eprintln!("{}", e);
         std::process::exit(1)
     });
     let branch_outputter = git::GitBranchOutputter {
@@ -44,7 +44,7 @@ fn main() {
     match select_and_print_branches(branch_outputter, std::io::stdout(), branch_selector) {
         Ok(_) => (),
         Err(e) => {
-            eprint!("{}", e);
+            eprintln!("{}", e);
             std::process::exit(1);
         }
     }
@@ -56,6 +56,9 @@ fn select_and_print_branches(
     branch_selector: impl Selector,
 ) -> Result<(), Error> {
     let branches = git::branch_list(branch_outputter)?;
+    if branches.is_empty() {
+        return Err(Error::Git("No matching branches to list".to_string()));
+    }
     let selected = branch_selector.select(&branches)?;
     write_branches(&selected, writer)?;
     Ok(())
@@ -155,6 +158,25 @@ mod tests {
 
             assert!(result.is_ok());
             assert_eq!(writer, b"main feature/123");
+        }
+
+        #[test]
+        fn error_given_no_matching_branches() {
+            let outputter = FakeOutputter {
+                success: true,
+                stdout: "\n".to_string(),
+                stderr: "".to_string(),
+            };
+            let selector = FakeSelector { selection: vec![] };
+            let mut writer = Vec::new();
+
+            let result = select_and_print_branches(outputter, &mut writer, selector);
+
+            assert!(result.is_err());
+            assert!(result
+                .unwrap_err()
+                .to_string()
+                .contains("No matching branches to list"));
         }
     }
 }
