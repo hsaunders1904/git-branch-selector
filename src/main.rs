@@ -36,6 +36,7 @@ fn main() {
     let branch_outputter = git::GitBranchOutputter {
         working_dir: args.git_dir,
         filter: args.filter.unwrap_or_else(|| "".to_string()),
+        all: args.all,
     };
     let branch_selector = InteractiveBranchSelector {
         theme: conf.theme(),

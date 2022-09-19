@@ -16,6 +16,7 @@ pub trait Outputter {
 pub struct GitBranchOutputter {
     pub working_dir: String,
     pub filter: String,
+    pub all: bool,
 }
 
 impl Outputter for GitBranchOutputter {
@@ -24,6 +25,9 @@ impl Outputter for GitBranchOutputter {
         command.arg("branch").arg("--list");
         if !self.filter.is_empty() {
             command.arg(&self.filter);
+        }
+        if self.all {
+            command.arg("--all");
         }
         match command.current_dir(&self.working_dir).output() {
             Ok(x) => Ok((x.status.success(), x.stdout, x.stderr)),
@@ -56,7 +60,12 @@ fn check_output(success: bool, stdout: Vec<u8>, stderr: Vec<u8>) -> Result<Strin
 }
 
 fn clean_branch(branch: &str) -> &str {
-    branch.trim().strip_prefix('*').unwrap_or(branch).trim()
+    let b = branch.trim().strip_prefix('*').unwrap_or(branch).trim();
+    if b.contains(" -> ") {
+        // Ignore aliased branches; we don't want to select the same thing twice
+        return "";
+    }
+    b
 }
 
 fn parse_branches(branch_list: &str) -> Vec<String> {
@@ -65,6 +74,7 @@ fn parse_branches(branch_list: &str) -> Vec<String> {
         .filter(|x| !x.trim().is_empty())
         .map(clean_branch)
         .map(|x| x.to_owned())
+        .filter(|x| !x.trim().is_empty())
         .collect()
 }
 
@@ -89,7 +99,7 @@ mod tests {
         fn parses_list_of_branches() {
             let outputter = FakeOutputter {
                 success: true,
-                stdout: " main\n* develop  \n \n   other/branch\n"
+                stdout: " main\n* develop  \n \n   other/branch\n HEAD -> main"
                     .as_bytes()
                     .to_vec(),
                 stderr: "".as_bytes().to_vec(),

@@ -13,6 +13,12 @@ pub struct Args {
         help = "Filter listed branches, uses same syntax as 'git branch --list'"
     )]
     pub filter: Option<String>,
+    #[clap(
+        long,
+        action,
+        help = "List both remote-tracking branches and local branches"
+    )]
+    pub all: bool,
 }
 
 pub fn parse_args(args: impl Iterator<Item = String>) -> Args {
@@ -83,6 +89,24 @@ mod tests {
 
             assert!(args.filter.is_some());
             assert_eq!(args.filter.unwrap(), "origin/*");
+        }
+
+        #[test]
+        fn filter_all_is_false_if_flag_not_given() {
+            let cli_args = to_string_iter!(["", "--filter", "origin/*"]);
+
+            let args = parse_args(cli_args);
+
+            assert!(!args.all);
+        }
+
+        #[test]
+        fn filter_all_is_true_given_flag() {
+            let cli_args = to_string_iter!(["", "--all"]);
+
+            let args = parse_args(cli_args);
+
+            assert!(args.all);
         }
     }
 }
