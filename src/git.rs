@@ -15,16 +15,17 @@ pub trait Outputter {
 
 pub struct GitBranchOutputter {
     pub working_dir: String,
+    pub filter: String,
 }
 
 impl Outputter for GitBranchOutputter {
     fn get_output(&self) -> Result<(bool, Vec<u8>, Vec<u8>), Error> {
-        match Command::new("git")
-            .arg("branch")
-            .arg("--list")
-            .current_dir(&self.working_dir)
-            .output()
-        {
+        let mut command = Command::new("git");
+        command.arg("branch").arg("--list");
+        if !self.filter.is_empty() {
+            command.arg(&self.filter);
+        }
+        match command.current_dir(&self.working_dir).output() {
             Ok(x) => Ok((x.status.success(), x.stdout, x.stderr)),
             Err(e) => Err(Error::Git(e.to_string())),
         }

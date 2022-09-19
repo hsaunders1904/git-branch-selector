@@ -7,6 +7,12 @@ pub struct Args {
     pub git_dir: String,
     #[clap(long, action, help = "Print the path to the configuration file")]
     pub config: bool,
+    #[clap(
+        value_parser,
+        long,
+        help = "Filter listed branches, uses same syntax as 'git branch --list'"
+    )]
+    pub filter: Option<String>,
 }
 
 pub fn parse_args(args: impl Iterator<Item = String>) -> Args {
@@ -58,6 +64,25 @@ mod tests {
             let args = parse_args(cli_args);
 
             assert!(args.config);
+        }
+
+        #[test]
+        fn filter_is_none_if_not_given() {
+            let cli_args = to_string_iter!([""]);
+
+            let args = parse_args(cli_args);
+
+            assert!(args.filter.is_none());
+        }
+
+        #[test]
+        fn filter_is_some_if_given() {
+            let cli_args = to_string_iter!(["", "--filter", "origin/*"]);
+
+            let args = parse_args(cli_args);
+
+            assert!(args.filter.is_some());
+            assert_eq!(args.filter.unwrap(), "origin/*");
         }
     }
 }
