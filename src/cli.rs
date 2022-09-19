@@ -3,16 +3,24 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[clap(author, version)]
 pub struct Args {
-    #[clap(value_parser, default_value = ".", help = "Path to git repository")]
-    pub git_dir: String,
-    #[clap(long, action, help = "Print the path to the configuration file")]
-    pub config: bool,
     #[clap(
         value_parser,
-        long,
         help = "Filter listed branches, uses same syntax as 'git branch --list'"
     )]
     pub filter: Option<String>,
+    #[clap(
+        value_parser,
+        long,
+        default_value = ".",
+        help = "Path to git repository"
+    )]
+    pub git_dir: String,
+    #[clap(
+        long,
+        action,
+        help = "Print the path to the configuration file and exit"
+    )]
+    pub config: bool,
     #[clap(
         long,
         action,
@@ -38,7 +46,7 @@ mod tests {
 
         #[test]
         fn git_dir_is_first_positional_arg() {
-            let cli_args = to_string_iter!(["", "/some/dir"]);
+            let cli_args = to_string_iter!(["", "--git-dir", "/some/dir"]);
 
             let args = parse_args(cli_args);
 
@@ -83,7 +91,7 @@ mod tests {
 
         #[test]
         fn filter_is_some_if_given() {
-            let cli_args = to_string_iter!(["", "--filter", "origin/*"]);
+            let cli_args = to_string_iter!(["", "origin/*"]);
 
             let args = parse_args(cli_args);
 
@@ -93,7 +101,7 @@ mod tests {
 
         #[test]
         fn filter_all_is_false_if_flag_not_given() {
-            let cli_args = to_string_iter!(["", "--filter", "origin/*"]);
+            let cli_args = to_string_iter!(["", "origin/*"]);
 
             let args = parse_args(cli_args);
 
