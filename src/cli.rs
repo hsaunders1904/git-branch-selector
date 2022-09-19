@@ -8,6 +8,7 @@ pub struct Args {
         help = "Filter listed branches, uses same syntax as 'git branch --list'"
     )]
     pub filter: Option<String>,
+
     #[clap(
         value_parser,
         long,
@@ -15,12 +16,14 @@ pub struct Args {
         help = "Path to git repository"
     )]
     pub git_dir: String,
+
     #[clap(
         long,
         action,
         help = "Print the path to the configuration file and exit"
     )]
     pub config: bool,
+
     #[clap(
         long,
         action,
