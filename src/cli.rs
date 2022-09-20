@@ -2,12 +2,13 @@ use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[clap(author, version)]
+#[clap(about = "Interactively select git branches and print them to stdout")]
 pub struct Args {
     #[clap(
         value_parser,
-        help = "Filter listed branches, uses same syntax as 'git branch --list'"
+        help = "List only the branches that match the given pattern(s), uses same syntax as 'git branch --list'"
     )]
-    pub filter: Option<String>,
+    pub filters: Vec<String>,
 
     #[clap(
         value_parser,
@@ -84,26 +85,34 @@ mod tests {
         }
 
         #[test]
-        fn filter_is_none_if_not_given() {
+        fn filter_is_empty_if_not_given() {
             let cli_args = to_string_iter!([""]);
 
             let args = parse_args(cli_args);
 
-            assert!(args.filter.is_none());
+            assert!(args.filter.is_empty());
         }
 
         #[test]
-        fn filter_is_some_if_given() {
+        fn filter_contains_single_given_string() {
             let cli_args = to_string_iter!(["", "origin/*"]);
 
             let args = parse_args(cli_args);
 
-            assert!(args.filter.is_some());
-            assert_eq!(args.filter.unwrap(), "origin/*");
+            assert_eq!(args.filter, ["origin/*"]);
         }
 
         #[test]
-        fn filter_all_is_false_if_flag_not_given() {
+        fn multiple_filters_can_be_set() {
+            let cli_args = to_string_iter!(["", "origin/*", "upstream/*"]);
+
+            let args = parse_args(cli_args);
+
+            assert_eq!(args.filter, ["origin/*", "upstream/*"]);
+        }
+
+        #[test]
+        fn all_is_false_if_flag_not_given() {
             let cli_args = to_string_iter!(["", "origin/*"]);
 
             let args = parse_args(cli_args);
@@ -112,7 +121,7 @@ mod tests {
         }
 
         #[test]
-        fn filter_all_is_true_given_flag() {
+        fn all_is_true_given_flag() {
             let cli_args = to_string_iter!(["", "--all"]);
 
             let args = parse_args(cli_args);

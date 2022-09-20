@@ -15,7 +15,7 @@ pub trait Outputter {
 
 pub struct GitBranchOutputter {
     pub working_dir: String,
-    pub filter: String,
+    pub filters: Vec<String>,
     pub all: bool,
 }
 
@@ -23,8 +23,8 @@ impl Outputter for GitBranchOutputter {
     fn get_output(&self) -> Result<(bool, Vec<u8>, Vec<u8>), Error> {
         let mut command = Command::new("git");
         command.arg("branch").arg("--list");
-        if !self.filter.is_empty() {
-            command.arg(&self.filter);
+        for filter in &self.filters {
+            command.arg(filter);
         }
         if self.all {
             command.arg("--all");
