@@ -25,3 +25,5 @@ thiserror = "1.0.32"
 [profile.release]
 strip = true  # strip symbols from the binary.
 opt-level = "z"  # optimize for size; we're not so worried about speed
+codegen-units = 1
+lto = true
