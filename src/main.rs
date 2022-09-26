@@ -57,7 +57,7 @@ fn select_and_print_branches(
 ) -> Result<(), Error> {
     let branches = git::branch_list(branch_outputter)?;
     if branches.is_empty() {
-        return Err(Error::Git("No matching branches to list".to_string()));
+        return Err(Error::Git("no matching branches to list".to_string()));
     }
     let selected = branch_selector.select(&branches)?;
     write_branches(&selected, writer)?;
@@ -176,7 +176,7 @@ mod tests {
             assert!(result
                 .unwrap_err()
                 .to_string()
-                .contains("No matching branches to list"));
+                .contains("no matching branches to list"));
         }
     }
 }

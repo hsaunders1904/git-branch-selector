@@ -38,22 +38,20 @@ impl Outputter for GitBranchOutputter {
 
 fn check_output(success: bool, stdout: Vec<u8>, stderr: Vec<u8>) -> Result<String, Error> {
     if !success {
-        return Err(Error::Git(format!(
-            "Error getting git branches: {}",
-            match String::from_utf8(stderr) {
-                Ok(x) => x,
-                Err(e) =>
-                    return Err(Error::Git(format!(
-                        "Could not decode git branch output: {}",
-                        e
-                    ))),
+        return Err(Error::Git(match String::from_utf8(stderr) {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(Error::Git(format!(
+                    "could not decode git branch output: {}",
+                    e
+                )))
             }
-        )));
+        }));
     }
     match String::from_utf8(stdout) {
         Ok(x) => Ok(x),
         Err(e) => Err(Error::Git(format!(
-            "Could not decode git branch output: {}",
+            "could not decode git branch output: {}",
             e
         ))),
     }
@@ -139,7 +137,7 @@ mod tests {
             let err = branches.unwrap_err();
             assert!(
                 err.to_string()
-                    .contains("Could not decode git branch output"),
+                    .contains("could not decode git branch output"),
                 "{}",
                 err
             );
@@ -159,7 +157,7 @@ mod tests {
             let err = branches.unwrap_err();
             assert!(
                 err.to_string()
-                    .contains("Could not decode git branch output"),
+                    .contains("could not decode git branch output"),
                 "{}",
                 err
             );
