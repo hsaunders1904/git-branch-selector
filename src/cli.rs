@@ -90,7 +90,7 @@ mod tests {
 
             let args = parse_args(cli_args);
 
-            assert!(args.filter.is_empty());
+            assert!(args.filters.is_empty());
         }
 
         #[test]
@@ -99,7 +99,7 @@ mod tests {
 
             let args = parse_args(cli_args);
 
-            assert_eq!(args.filter, ["origin/*"]);
+            assert_eq!(args.filters, ["origin/*"]);
         }
 
         #[test]
@@ -108,7 +108,7 @@ mod tests {
 
             let args = parse_args(cli_args);
 
-            assert_eq!(args.filter, ["origin/*", "upstream/*"]);
+            assert_eq!(args.filters, ["origin/*", "upstream/*"]);
         }
 
         #[test]
