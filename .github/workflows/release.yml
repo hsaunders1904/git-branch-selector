@@ -1,13 +1,12 @@
-name: git-branch-selector release
+name: release
 
 on:
   workflow_dispatch:
 
 jobs:
-  ubuntu:
-    name: ubuntu
+  release:
+    name: release
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -15,20 +14,141 @@ jobs:
       - name: Get version
         id: get-version
         run: |
-          version=$(sed -rn 's/^version\s*=\s*\"([0-9]+.[0-9]+.[0-9]+)\"\s*$/\1/p' Cargo.toml)
+          python3 -m pip install toml
+          version="$(./tools/package/version)"
           echo ::set-output name=version::${version}
-
-      - name: Make deb package
-        run: |
-          cargo install cargo-deb
-          cargo-deb
 
       - name: Make release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          deb_rel=$(ls target/debian/*.deb)
           version="v${{ steps.get-version.outputs.version }}"
-          gh release create ${version} ${deb_rel} \
+          gh release create "${version}" \
             --target main \
-            --title "${version}"
+            --title "${version}" \
+            --draft
+
+  ubuntu:
+    name: ${{ matrix.job.target }}
+    runs-on: ${{ matrix.job.os }}
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - { os: ubuntu-latest, target: aarch64-unknown-linux-gnu }
+          - { os: ubuntu-latest, target: i686-unknown-linux-gnu }
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu }
+          - { os: macos-latest, target: x86_64-apple-darwin }
+          - { os: macos-latest, target: aarch64-apple-darwin }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get version
+        id: get-version
+        run: |
+          python3 -m pip install toml
+          version="$(./tools/package/version)"
+          echo ::set-output name=version::${version}
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.job.target }}
+          override: true
+          profile: minimal
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --locked --release --target=${{ matrix.job.target }}
+
+      - name: Make deb package
+        if: startsWith(matrix.job.os, 'ubuntu')
+        run: |
+          case ${{ matrix.job.target }} in
+            aarch64-*-linux-*) arch=arm64 ;;
+            i686-*-linux-*) arch=i686 ;;
+            x86_64-*-linux-*) arch=amd64 ;;
+            *) exit 2 ;;
+          esac;
+          binary="target/${{ matrix.job.target }}/release/bselect"
+          ./tools/package/package-deb -a "${arch}" -o "packages" -b "${binary}"
+
+      - name: Make tar package
+        run: |
+          case ${{ matrix.job.target }} in
+            aarch64-*-linux-*) arch=arm64; os=linux ;;
+            i686-*-linux-*) arch=i686; os=linux ;;
+            x86_64-*-linux-*) arch=amd64; os=linux ;;
+            aarch64-apple-darwin) arch=arm64; os=osx ;;
+            x86_64-apple-darwin) arch=x64; os=osx ;;
+            *) exit 3 ;;
+          esac;
+          binary="target/${{ matrix.job.target }}/release/bselect"
+          ./tools/package/package-archive --binary "${binary}" --arch "${arch}" --os "${os}"
+
+      - name: Upload deb package
+        if: startsWith(matrix.job.os, 'ubuntu')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${{ steps.get-version.outputs.version }}"
+          deb_pkg="$(ls packages/*.deb)"
+          ./tools/package/sha256 "${deb_pkg}" > "${deb_pkg}.sha256"
+          gh release upload "v${version}" "${deb_pkg}" "${deb_pkg}.sha256"
+
+      - name: Upload tar package
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${{ steps.get-version.outputs.version }}"
+          tar_pkg="$(ls *.tar.gz)"
+          ./tools/package/sha256 "${tar_pkg}" > "${tar_pkg}.sha256"
+          gh release upload "v${version}" "${tar_pkg}" "${tar_pkg}.sha256"
+
+  windows:
+    name: windows
+    runs-on: windows-latest
+    needs: release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get version
+        id: get-version
+        run: |
+          python3 -m pip install toml
+          $version = python3 ./tools/package/version
+          echo "::set-output name=version::${version}"
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --locked --release
+
+      - name: Make Wix package
+        run: |
+          cargo install cargo-wix
+          cargo wix init
+          cargo wix
+
+      - name: Make zip package
+        run: |
+          python3 ./tools/package/package-archive --archive-type zip --binary ./target/release/bselect.exe --arch x64 --os win
+
+      - name: Upload packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = "v${{ steps.get-version.outputs.version }}"
+          $msi = "$(Get-ChildItem -Path target/wix *.msi)"
+          python3 ./tools/package/sha256 "${msi}" > "${msi}.sha256"
+          $zip = "$(Get-ChildItem -Path . *.zip)"
+          python3 ./tools/package/sha256 "${zip}" > "${zip}.sha256"
+          gh release upload "${version}" "${msi}" "${msi}.sha256" "${zip}" "${zip}.sha256"
