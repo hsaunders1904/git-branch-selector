@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+
+import argparse
+from dataclasses import dataclass
+from hashlib import sha256
+from typing import List
+
+BUF_SIZE = 131072  # 128 kib
+
+
+@dataclass
+class Args:
+    file_path: str
+
+
+def parse_args(sys_args: List[str]) -> Args:
+    parser = argparse.ArgumentParser(description="SHA256 digest a file")
+    parser.add_argument("file_path", help="path to the file to SHA")
+    return Args(**vars(parser.parse_args(sys_args)))
+
+
+def hash_file(file_path: str) -> str:
+    sha = sha256()
+    with open(file_path, "rb") as f:
+        while True:
+            data = f.read(BUF_SIZE)
+            if not data:
+                break
+            sha.update(data)
+    return sha.hexdigest()
+
+
+if __name__ == "__main__":
+    import sys
+
+    args = parse_args(sys.argv[1:])
+    print(hash_file(args.file_path))

@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import platform
+import sys
+import tarfile
+from dataclasses import dataclass
+from typing import Dict, List
+from zipfile import ZipFile
+
+NAME = "bselect"
+MANIFEST = {
+    "README.md": f"share/doc/{NAME}/README.md",
+    "LICENSE": f"share/doc/{NAME}/copyright",
+}
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+VERSION_PATTERN = "[0-9]+\\.[0-9]+\\.[0-9]+"
+DEFAULT_BINARY = "./target/release/bselect"
+if platform.system().lower() == "windows":
+    DEFAULT_BINARY += ".exe"
+
+
+@dataclass
+class Args:
+    out_dir: str
+    binary: str
+    archive_type: str
+    arch: str
+    op_sys: str
+
+
+def parse_args(sys_args: List[str]) -> Args:
+    parser = argparse.ArgumentParser(
+        "bselect-package", description="Make an archive package of bselect."
+    )
+    parser.add_argument(
+        "-o", "--out-dir", help="path to write the package to", default="."
+    )
+    parser.add_argument(
+        "-b",
+        "--binary",
+        help="path to built binary",
+        default=DEFAULT_BINARY,
+    )
+    parser.add_argument(
+        "-t",
+        "--archive-type",
+        help="the type of archive to make",
+        choices=["tar.gz", "zip"],
+        default="tar.gz",
+    )
+    parser.add_argument(
+        "-a",
+        "--arch",
+        help="the architecture of the package. Default is PC architecture",
+        default=platform.machine(),
+    )
+    parser.add_argument(
+        "-s",
+        "--os",
+        help="the OS the package is built for. Default is PC OS",
+        default=sys.platform,
+        dest="op_sys",
+    )
+    args = parser.parse_args(sys_args)
+    return Args(**vars(args))
+
+
+def build_file_name(version: str, op_sys: str, arch: str, ext: str) -> str:
+    return f"{NAME}-{version}-{op_sys}-{arch}{ext}"
+
+
+def get_version() -> str:
+    cargo_toml = os.path.join(REPO_ROOT, "Cargo.toml")
+    with open(cargo_toml, "r") as f:
+        for line in f:
+            if line.startswith("version"):
+                return line.split("=")[1].strip(' "\n')
+    print(f"error: could not parse version from '{cargo_toml}'.")
+
+
+def write_tar(files: Dict[str, str], out_path: str):
+    with tarfile.open(out_path, "w:gz") as tar:
+        for src, target in files.items():
+            tar.add(os.path.join(REPO_ROOT, src), target)
+
+
+def write_zip(files: Dict[str, str], out_path: str):
+    with ZipFile(out_path, "w") as zip_file:
+        for src, target in files.items():
+            zip_file.write(src, target)
+
+
+def write_archive(manifest: Dict[str, str], archive_type: str, out_path):
+    if archive_type == "tar.gz":
+        write_tar(manifest, out_path)
+    elif archive_type == "zip":
+        write_zip(manifest, out_path)
+
+
+if __name__ == "__main__":
+    args = parse_args(sys.argv[1:])
+    version = get_version()
+    file_name = build_file_name(
+        version, args.op_sys, args.arch, f".{args.archive_type}"
+    )
+    out_path = os.path.join(args.out_dir, file_name)
+    write_archive({**MANIFEST, args.binary: "bin/bselect"}, args.archive_type, out_path)
+    print(f"written archive: {out_path}")

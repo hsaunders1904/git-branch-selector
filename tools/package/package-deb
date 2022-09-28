@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+set -e
+
+NAME="bselect"
+ARCH="arm64"
+PACKAGING_DIR="/tmp"
+OUT_DIR="."
+BINARY_PATH="target/release/${NAME}"
+while getopts "a:o:p:b:" opt; do
+  case "$opt" in
+    a) ARCH="${OPTARG}"
+      ;;
+    o) OUT_DIR="${OPTARG}"
+      ;;
+    p) PACKAGING_DIR="${OPTARG}"
+      ;;
+    b) BINARY_PATH="${OPTARG}"
+      ;;
+    *) echo "Invalid flag '${opt}'."; exit 1
+  esac
+done
+
+set -x
+
+# Pull info from Cargo.toml
+VERSION="$(sed -n 's/version = "\(.*\)"$/\1/p' Cargo.toml)"
+AUTHOR="$(sed -n 's/authors = \["\(.*\)"\]$/\1/p' Cargo.toml)"
+ISSUES_URL="$(sed -n 's/repository = "\(.*\)"$/\1/p' Cargo.toml)/issues"
+
+# Pacaking directory root
+ROOT="${PACKAGING_DIR}/${NAME}_${VERSION}_${ARCH}"
+
+# Binary
+BIN_DIR="${ROOT}/usr/bin"
+mkdir -p "${BIN_DIR}"
+install -Dm755 "${BINARY_PATH}" "${BIN_DIR}/${NAME}"
+
+# Docs
+DOC_DIR="${ROOT}/usr/share/doc/${NAME}"
+mkdir -p "${DOC_DIR}"
+install -Dm644 "README.md" "${DOC_DIR}/README.md"
+install -Dm644 "LICENSE" "${DOC_DIR}/copyright"
+
+# Control file
+DEBIAN_DIR="${ROOT}/DEBIAN"
+mkdir -p "${DEBIAN_DIR}"
+echo "Package: ${NAME}
+Version: ${VERSION}
+Maintainer: ${AUTHOR}
+Section: utils
+Priority: optional
+Architecture: ${ARCH}
+Bugs: ${ISSUES_URL}
+Recommends: git
+Description: ${NAME}
+ Interactive command line git branch selector" > "${DEBIAN_DIR}/control"
+chmod 644 "${DEBIAN_DIR}/control"
+
+# Make deb
+mkdir -p "${OUT_DIR}"
+fakeroot dpkg-deb --build "${ROOT}" "${OUT_DIR}"
