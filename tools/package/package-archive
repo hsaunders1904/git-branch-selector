@@ -11,8 +11,8 @@ from zipfile import ZipFile
 
 NAME = "bselect"
 MANIFEST = {
-    "README.md": f"share/doc/{NAME}/README.md",
-    "LICENSE": f"share/doc/{NAME}/copyright",
+    "README.md": "README.md",
+    "LICENSE": "LICENSE",
 }
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 VERSION_PATTERN = "[0-9]+\\.[0-9]+\\.[0-9]+"
