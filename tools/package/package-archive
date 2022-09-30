@@ -102,7 +102,7 @@ def write_tar(files: Dict[str, str], out_path: str):
 def write_zip(files: Dict[str, str], out_path: str):
     with ZipFile(out_path, "w") as zip_file:
         for src, target in files.items():
-            zip_file.write(src, target)
+            zip_file.write(os.path.join(REPO_ROOT, src), target)
 
 
 def write_archive(manifest: Dict[str, str], archive_type: str, out_path):
