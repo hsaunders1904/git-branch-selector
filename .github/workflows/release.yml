@@ -84,7 +84,7 @@ jobs:
           case ${{ matrix.job.target }} in
             aarch64-*-linux-*) arch=arm64; os=linux ;;
             i686-*-linux-*) arch=i686; os=linux ;;
-            x86_64-*-linux-*) arch=amd64; os=linux ;;
+            x86_64-*-linux-*) arch=x64; os=linux ;;
             aarch64-apple-darwin) arch=arm64; os=osx ;;
             x86_64-apple-darwin) arch=x64; os=osx ;;
             *) exit 3 ;;
@@ -132,12 +132,6 @@ jobs:
           command: build
           args: --locked --release
 
-      - name: Make Wix package
-        run: |
-          cargo install cargo-wix
-          cargo wix init
-          cargo wix
-
       - name: Make zip package
         run: |
           python3 ./tools/package/package-archive --archive-type zip --binary ./target/release/bselect.exe --arch x64 --os win
@@ -147,8 +141,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $version = "v${{ steps.get-version.outputs.version }}"
-          $msi = "$(Get-ChildItem -Path target/wix *.msi)"
-          python3 ./tools/package/sha256 "${msi}" > "${msi}.sha256"
           $zip = "$(Get-ChildItem -Path . *.zip)"
           python3 ./tools/package/sha256 "${zip}" > "${zip}.sha256"
-          gh release upload "${version}" "${msi}" "${msi}.sha256" "${zip}" "${zip}.sha256"
+          gh release upload "${version}" "${zip}" "${zip}.sha256"
