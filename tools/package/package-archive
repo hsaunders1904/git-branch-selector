@@ -53,14 +53,17 @@ def parse_args(sys_args: List[str]) -> Args:
     parser.add_argument(
         "-a",
         "--arch",
-        help="the architecture of the package. Default is PC architecture",
+        help=(
+            "override the architecture label in the package name. Default is PC "
+            "architecture"
+        ),
         default=platform.machine(),
     )
     parser.add_argument(
         "-s",
         "--os",
-        help="the OS the package is built for. Default is PC OS",
-        default=sys.platform,
+        help="override the OS label in the package name. Default is PC OS",
+        default=get_platform(),
         dest="op_sys",
     )
     args = parser.parse_args(sys_args)
@@ -78,6 +81,16 @@ def get_version() -> str:
             if line.startswith("version"):
                 return line.split("=")[1].strip(' "\n')
     print(f"error: could not parse version from '{cargo_toml}'.")
+
+
+def get_platform() -> str:
+    if sys.platform.startswith("linux"):
+        return "linux"
+    if sys.platform.startswith("win"):
+        return "win"
+    if sys.platform == "darwin":
+        return "osx"
+    return sys.platform
 
 
 def write_tar(files: Dict[str, str], out_path: str):
