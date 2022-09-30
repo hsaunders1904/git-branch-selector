@@ -57,7 +57,7 @@ def parse_args(sys_args: List[str]) -> Args:
             "override the architecture label in the package name. Default is PC "
             "architecture"
         ),
-        default=platform.machine(),
+        default=get_arch(),
     )
     parser.add_argument(
         "-s",
@@ -91,6 +91,13 @@ def get_platform() -> str:
     if sys.platform == "darwin":
         return "osx"
     return sys.platform
+
+
+def get_arch() -> str:
+    arch = platform.machine().lower()
+    if arch in ("x86_64", "x64", "amd64"):
+        return "x64"
+    return arch.lower()
 
 
 def write_tar(files: Dict[str, str], out_path: str):
