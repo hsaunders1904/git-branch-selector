@@ -3,7 +3,7 @@
 set -e
 
 NAME="bselect"
-ARCH="arm64"
+ARCH="$(dpkg --print-architecture)"
 PACKAGING_DIR="/tmp"
 OUT_DIR="."
 BINARY_PATH="target/release/${NAME}"
