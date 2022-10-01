@@ -126,5 +126,8 @@ if __name__ == "__main__":
         version, args.op_sys, args.arch, f".{args.archive_type}"
     )
     out_path = os.path.join(args.out_dir, file_name)
-    write_archive({**MANIFEST, args.binary: "bin/bselect"}, args.archive_type, out_path)
+    output_binary = "bin/bselect"
+    if platform.system().lower() == "windows":
+        output_binary += ".exe"
+    write_archive({**MANIFEST, args.binary: output_binary}, args.archive_type, out_path)
     print(f"written archive: {out_path}")
