@@ -15,10 +15,11 @@ MANIFEST = {
     "LICENSE": "LICENSE",
 }
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-VERSION_PATTERN = "[0-9]+\\.[0-9]+\\.[0-9]+"
 DEFAULT_BINARY = "./target/release/bselect"
+OUTPUT_BINARY = "bin/bselect"
 if platform.system().lower() == "windows":
     DEFAULT_BINARY += ".exe"
+    OUTPUT_BINARY += ".exe"
 
 
 @dataclass
@@ -70,7 +71,7 @@ def parse_args(sys_args: List[str]) -> Args:
     return Args(**vars(args))
 
 
-def build_file_name(version: str, op_sys: str, arch: str, ext: str) -> str:
+def build_archive_name(version: str, op_sys: str, arch: str, ext: str) -> str:
     return f"{NAME}-{version}-{op_sys}-{arch}{ext}"
 
 
@@ -122,12 +123,9 @@ def write_archive(manifest: Dict[str, str], archive_type: str, out_path):
 if __name__ == "__main__":
     args = parse_args(sys.argv[1:])
     version = get_version()
-    file_name = build_file_name(
+    file_name = build_archive_name(
         version, args.op_sys, args.arch, f".{args.archive_type}"
     )
     out_path = os.path.join(args.out_dir, file_name)
-    output_binary = "bin/bselect"
-    if platform.system().lower() == "windows":
-        output_binary += ".exe"
-    write_archive({**MANIFEST, args.binary: output_binary}, args.archive_type, out_path)
+    write_archive({**MANIFEST, args.binary: OUTPUT_BINARY}, args.archive_type, out_path)
     print(f"written archive: {out_path}")
