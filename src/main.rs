@@ -7,13 +7,13 @@ mod theme;
 
 #[derive(thiserror::Error, Debug, Eq, PartialEq)]
 pub enum Error {
-    #[error("config error: {0}")]
+    #[error("bselect: config: {0}")]
     Config(String),
-    #[error("git error: {0}")]
+    #[error("bselect: git: {0}")]
     Git(String),
-    #[error("input error: {0}")]
+    #[error("bselect: input: {0}")]
     Input(String),
-    #[error("output error: {0}")]
+    #[error("bselect: write: {0}")]
     Write(String),
 }
 
