@@ -19,33 +19,13 @@ const CONFIG_FILE_EXT: &str = "json";
 pub fn init_config() -> Result<Config, Error> {
     let file_path = match config_path() {
         Some(x) => x,
-        None => return Err(Error::Config("could not build config path.".to_string())),
+        None => return Err(Error::Config("could not build config path".to_string())),
     };
     make_dir_if_not_exist(file_path.parent().unwrap())?;
-    let mut file: File;
     if !file_path.exists() {
-        file = match File::create(&file_path) {
-            Ok(x) => x,
-            Err(e) => {
-                return Err(Error::Config(format!(
-                    "{} '{}': {}",
-                    COULD_NOT_CREATE,
-                    file_path.to_string_lossy().to_owned(),
-                    e
-                )))
-            }
-        };
-        let default_config = Config::default();
-        if let Err(e) = write!(&mut file, "{}", default_config.to_json()?) {
-            return Err(Error::Config(format!("{}: {}", COULD_NOT_WRITE, e)));
-        };
-        Ok(default_config)
+        make_config_file(&file_path)
     } else {
-        file = match File::open(file_path) {
-            Ok(x) => x,
-            Err(e) => return Err(Error::Config(format!("{}: {}", COULD_NOT_OPEN, e))),
-        };
-        Ok(Config::from_json(&mut file)?)
+        read_config_file(&file_path)
     }
 }
 
@@ -60,6 +40,33 @@ pub fn config_path() -> Option<PathBuf> {
             .join(CONFIG_DIR_NAME)
             .join(format!("{}.{}", CONFIG_FILE_NAME, CONFIG_FILE_EXT)),
     )
+}
+
+fn read_config_file(file_path: &PathBuf) -> Result<Config, Error> {
+    let mut file = match File::open(file_path) {
+        Ok(x) => x,
+        Err(e) => return Err(Error::Config(format!("{}: {}", COULD_NOT_OPEN, e))),
+    };
+    Config::from_json(&mut file)
+}
+
+fn make_config_file(file_path: &PathBuf) -> Result<Config, Error> {
+    let mut file = match File::create(&file_path) {
+        Ok(x) => x,
+        Err(e) => {
+            return Err(Error::Config(format!(
+                "{} '{}': {}",
+                COULD_NOT_CREATE,
+                file_path.to_string_lossy().to_owned(),
+                e
+            )))
+        }
+    };
+    let default_config = Config::default();
+    if let Err(e) = write!(&mut file, "{}", default_config.to_json()?) {
+        return Err(Error::Config(format!("{}: {}", COULD_NOT_WRITE, e)));
+    };
+    Ok(default_config)
 }
 
 fn make_dir_if_not_exist(dir: &Path) -> Result<(), Error> {
@@ -120,11 +127,11 @@ impl Config {
     }
 
     pub fn from_json(reader: &mut impl Read) -> Result<Config, Error> {
-        let mut toml_str = String::new();
-        if let Err(e) = reader.read_to_string(&mut toml_str) {
+        let mut json_str = String::new();
+        if let Err(e) = reader.read_to_string(&mut json_str) {
             return Err(Error::Config(format!("{}: {}", COULD_NOT_READ, e)));
         };
-        match serde_json::from_str(&toml_str) {
+        match serde_json::from_str(&json_str) {
             Ok(config) => Ok(config),
             Err(e) => Err(Error::Config(format!("{}: {}", COULD_NOT_PARSE, e))),
         }
