@@ -3,6 +3,9 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
+mod base;
+
+use crate::config::base::BaseConfig;
 use crate::theme::GbsTheme;
 use crate::Error;
 
@@ -15,6 +18,50 @@ const COULD_NOT_WRITE: &str = "could not write config file";
 const CONFIG_DIR_NAME: &str = "git-branch-selector";
 const CONFIG_FILE_NAME: &str = "config";
 const CONFIG_FILE_EXT: &str = "json";
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Config {
+    pub base: BaseConfig,
+    pub themes: Vec<GbsTheme>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            base: BaseConfig::default(),
+            themes: vec![GbsTheme::default()],
+        }
+    }
+}
+
+impl Config {
+    pub fn theme(&self) -> GbsTheme {
+        for t in &self.themes {
+            if t.name == self.base.theme {
+                return t.clone();
+            }
+        }
+        GbsTheme::default()
+    }
+
+    pub fn to_json(&self) -> Result<String, Error> {
+        match serde_json::to_string_pretty(self) {
+            Ok(x) => Ok(x),
+            Err(e) => Err(Error::Config(format!("could not serialize config: {}", e))),
+        }
+    }
+
+    pub fn from_json(reader: &mut impl Read) -> Result<Config, Error> {
+        let mut json_str = String::new();
+        if let Err(e) = reader.read_to_string(&mut json_str) {
+            return Err(Error::Config(format!("{}: {}", COULD_NOT_READ, e)));
+        };
+        match serde_json::from_str(&json_str) {
+            Ok(config) => Ok(config),
+            Err(e) => Err(Error::Config(format!("{}: {}", COULD_NOT_PARSE, e))),
+        }
+    }
+}
 
 pub fn init_config() -> Result<Config, Error> {
     let file_path = match config_path() {
@@ -81,76 +128,8 @@ fn make_dir_if_not_exist(dir: &Path) -> Result<(), Error> {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct BaseConfig {
-    theme: String,
-}
-
-impl Default for BaseConfig {
-    fn default() -> Self {
-        BaseConfig {
-            theme: GbsTheme::default().name,
-        }
-    }
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Config {
-    pub base: BaseConfig,
-    pub themes: Vec<GbsTheme>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            base: BaseConfig::default(),
-            themes: vec![GbsTheme::default()],
-        }
-    }
-}
-
-impl Config {
-    pub fn theme(&self) -> GbsTheme {
-        for t in &self.themes {
-            if t.name == self.base.theme {
-                return t.clone();
-            }
-        }
-        GbsTheme::default()
-    }
-
-    pub fn to_json(&self) -> Result<String, Error> {
-        match serde_json::to_string_pretty(self) {
-            Ok(x) => Ok(x),
-            Err(e) => Err(Error::Config(format!("could not serialize config: {}", e))),
-        }
-    }
-
-    pub fn from_json(reader: &mut impl Read) -> Result<Config, Error> {
-        let mut json_str = String::new();
-        if let Err(e) = reader.read_to_string(&mut json_str) {
-            return Err(Error::Config(format!("{}: {}", COULD_NOT_READ, e)));
-        };
-        match serde_json::from_str(&json_str) {
-            Ok(config) => Ok(config),
-            Err(e) => Err(Error::Config(format!("{}: {}", COULD_NOT_PARSE, e))),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
-
-    mod base_config {
-        use crate::config::BaseConfig;
-
-        #[test]
-        fn default_config_uses_default_theme() {
-            let config = BaseConfig::default();
-
-            assert_eq!(config.theme, "default");
-        }
-    }
 
     mod config {
 
@@ -166,7 +145,7 @@ mod tests {
         mod theme {
             use crate::theme::{Style, StyledString};
             use crate::{
-                config::{BaseConfig, Config},
+                config::{base::BaseConfig, Config},
                 theme::GbsTheme,
             };
 
