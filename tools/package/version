@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Extract this package's version from Cargo.toml."""
 
 import os
 from typing import Dict

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Make an archive package of bselect."""
 
 import argparse
 import os
@@ -32,9 +33,7 @@ class Args:
 
 
 def parse_args(sys_args: List[str]) -> Args:
-    parser = argparse.ArgumentParser(
-        "bselect-package", description="Make an archive package of bselect."
-    )
+    parser = argparse.ArgumentParser("bselect-package", description=__doc__)
     parser.add_argument(
         "-o", "--out-dir", help="path to write the package to", default="."
     )
