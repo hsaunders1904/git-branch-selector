@@ -19,6 +19,10 @@ pub enum Error {
 
 fn main() {
     let args = cli::parse_args(std::env::args());
+    let conf = config::init_config().unwrap_or_else(|e| {
+        eprintln!("{}", e);
+        std::process::exit(1)
+    });
     if args.config {
         match print_config_path() {
             Ok(_) => std::process::exit(0),
@@ -28,11 +32,6 @@ fn main() {
             }
         }
     }
-
-    let conf = config::init_config().unwrap_or_else(|e| {
-        eprintln!("{}", e);
-        std::process::exit(1)
-    });
     let branch_outputter = git::GitBranchOutputter {
         working_dir: args.git_dir,
         filters: args.filters,
