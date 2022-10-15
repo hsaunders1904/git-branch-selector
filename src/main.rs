@@ -21,7 +21,7 @@ fn main() {
     let args = cli::parse_args(std::env::args());
     let conf = config::init_config().unwrap_or_else(|e| {
         eprintln!("{}", e);
-        std::process::exit(1)
+        config::Config::default()
     });
     if args.config {
         match print_config_path() {
