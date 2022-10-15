@@ -109,7 +109,7 @@ impl Selector for InteractiveBranchSelector {
 }
 
 fn write_branches(branches: &[String], mut writer: impl std::io::Write) -> Result<(), Error> {
-    match write!(writer, "{}", branches.join(" ")) {
+    match writeln!(writer, "{}", branches.join(" ")) {
         Ok(_) => (),
         Err(e) => return Err(Error::Write(e.to_string())),
     }
@@ -165,7 +165,7 @@ mod tests {
             let result = select_and_print_branches(outputter, &mut writer, selector);
 
             assert!(result.is_ok());
-            assert_eq!(writer, b"main feature/123");
+            assert_eq!(writer, b"main feature/123\n");
         }
 
         #[test]
