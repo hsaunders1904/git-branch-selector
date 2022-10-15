@@ -54,13 +54,25 @@ fn select_and_print_branches(
     writer: impl std::io::Write,
     branch_selector: impl Selector,
 ) -> Result<(), Error> {
-    let branches = git::branch_list(branch_outputter)?;
-    if branches.is_empty() {
+    let all_branches = git::branch_list(branch_outputter)?;
+    if all_branches.is_empty() {
         return Err(Error::Git("no matching branches to list".to_string()));
     }
-    let selected = branch_selector.select(&branches)?;
-    write_branches(&selected, writer)?;
+    let selected_branches = select_branches(&all_branches, branch_selector)?;
+    write_branches(&selected_branches, writer)?;
     Ok(())
+}
+
+fn select_branches(
+    branches: &[String],
+    branch_selector: impl Selector,
+) -> Result<Vec<String>, Error> {
+    let selected_idxs = branch_selector.select(branches)?;
+    let selected_branches = selected_idxs
+        .iter()
+        .map(|i| branches[*i].to_owned())
+        .collect::<Vec<_>>();
+    Ok(selected_branches)
 }
 
 fn print_config_path() -> Result<(), Error> {
@@ -74,7 +86,7 @@ fn print_config_path() -> Result<(), Error> {
 }
 
 trait Selector {
-    fn select(&self, options: &[String]) -> Result<Vec<String>, Error>;
+    fn select(&self, options: &[String]) -> Result<Vec<usize>, Error>;
 }
 
 struct InteractiveBranchSelector {
@@ -82,16 +94,13 @@ struct InteractiveBranchSelector {
 }
 
 impl Selector for InteractiveBranchSelector {
-    fn select(&self, options: &[String]) -> Result<Vec<String>, Error> {
+    fn select(&self, options: &[String]) -> Result<Vec<usize>, Error> {
         match MultiSelect::with_theme(&self.theme)
             .items(options)
             .interact_opt()
         {
-            Ok(x) => match x {
-                Some(choosen_idxs) => Ok(choosen_idxs
-                    .iter()
-                    .map(|i| options[*i].to_owned())
-                    .collect::<Vec<_>>()),
+            Ok(idxs) => match idxs {
+                Some(x) => Ok(x),
                 None => Ok(vec![]),
             },
             Err(e) => Err(Error::Input(e.to_string())),
@@ -133,10 +142,10 @@ mod tests {
         }
 
         struct FakeSelector {
-            selection: Vec<String>,
+            selection: Vec<usize>,
         }
         impl Selector for FakeSelector {
-            fn select(&self, _: &[String]) -> Result<Vec<String>, Error> {
+            fn select(&self, _: &[String]) -> Result<Vec<usize>, Error> {
                 Ok(self.selection.clone())
             }
         }
@@ -149,7 +158,7 @@ mod tests {
                 stderr: "".to_string(),
             };
             let selector = FakeSelector {
-                selection: vec!["main".to_string(), "feature/123".to_string()],
+                selection: vec![0, 2],
             };
             let mut writer = Vec::new();
 
