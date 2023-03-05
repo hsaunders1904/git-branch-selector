@@ -15,12 +15,17 @@ name = "bselect"
 path = "src/main.rs"
 
 [dependencies]
-clap = { version = "3.2.17", features = ["derive"] }
-dialoguer = "0.10.2"
+clap = { version = "4.1.6", features = ["derive"] }
+dialoguer = "0.10.3"
 directories = "4.0.1"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0.85"
-thiserror = "1.0.32"
+git2 = "0.16.1"
+regex = "1.7.1"
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.93"
+thiserror = "1.0.38"
+
+[dev-dependencies]
+tempdir = "0.3.7"
 
 [profile.release]
 strip = true  # strip symbols from the binary.
