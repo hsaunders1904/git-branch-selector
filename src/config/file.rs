@@ -96,7 +96,7 @@ mod tests {
 
         #[test]
         fn default_config_file_created_if_dir_does_not_exist() {
-            let base_dir = tempdir::TempDir::new("dir_does_not_exist").unwrap();
+            let base_dir = tempfile::tempdir().unwrap();
             let conf_path = base_dir
                 .path()
                 .join("a_dir")
@@ -111,7 +111,7 @@ mod tests {
 
         #[test]
         fn config_read_if_file_exists() {
-            let base_dir = tempdir::TempDir::new("file_exists").unwrap();
+            let base_dir = tempfile::tempdir().unwrap();
             let conf_path = base_dir.path().join("config.json");
             let file_content = r#"{
                 "theme": "custom_theme_B",
