@@ -3,6 +3,10 @@ use clap::Parser;
 use crate::Error;
 
 #[derive(clap::Parser, Debug)]
+#[clap(
+    about = "Interactively select git branches and print them to stdout",
+    version
+)]
 pub struct Args {
     #[clap(
         value_parser,
