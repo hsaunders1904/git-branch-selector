@@ -25,4 +25,7 @@ jobs:
           toolchain: stable
 
       - name: Build & Test
-        run: cargo test --release --all-features
+        run: |
+          # some tests check for colour formatting, so force colours here
+          export CLICOLOR_FORCE=1
+          cargo test --release --all-features
