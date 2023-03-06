@@ -22,8 +22,8 @@ impl BranchGetter for Git2BranchGetter {
 
 impl Git2BranchGetter {
     fn open_repo(&self) -> Result<git2::Repository, Error> {
-        git2::Repository::open(&self.repo_dir)
-            .map_err(|e| Error::Git(format!("could not read repository: {}", e)))
+        git2::Repository::discover(&self.repo_dir)
+            .map_err(|e| Error::Git(format!("could not read repository: {}", e.message())))
     }
 
     fn make_branch(reference: &git2::Reference) -> Option<Branch> {
