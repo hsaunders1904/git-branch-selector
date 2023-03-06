@@ -29,28 +29,32 @@ Get the path to the config file on your system using:
 bselect --config
 ```
 
-See the [JSON schema](./docs/config_schema.json) for the config,
-for all available settings.
+See the [JSON schema](./docs/config_schema.json) for all available settings.
 As a quick example to get started configuring a new theme,
 the below produces the theme used in the GIF above:
 
 ```json
 {
-    "name": "emoji",
-    "checked_item_prefix": {
-        "value": "✓",
-        "foreground": "green"
-    },
-    "unchecked_item_prefix": {
-        "value": "✕",
-        "foreground": "red"
-    },
-    "active_item_prefix": {
-        "value": "👉 "
-    },
-    "inactive_item_prefix": {
-        "value": "   "
-    }
+    "theme": "emoji",
+    "themes": [
+        {
+            "name": "emoji",
+            "checked_item_prefix": {
+                "value": "✓",
+                "foreground": "green"
+            },
+            "unchecked_item_prefix": {
+                "value": "✕",
+                "foreground": "red"
+            },
+            "active_item_prefix": {
+                "value": "👉 "
+            },
+            "inactive_item_prefix": {
+                "value": "   "
+            }
+        }
+    ]
 }
 ```
 
