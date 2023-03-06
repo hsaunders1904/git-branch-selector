@@ -75,12 +75,28 @@ def build_archive_name(version: str, op_sys: str, arch: str, ext: str) -> str:
 
 
 def get_version() -> str:
-    cargo_toml = os.path.join(REPO_ROOT, "Cargo.toml")
+    """
+    Pull the package version from Cargo.toml.
+
+    We should really be using the 'toml' library to do this, but it's
+    not yet part of the Python standard, and we want this to work
+    without having to install anything.
+    """
+    cargo_toml = os.path.normpath(os.path.join(REPO_ROOT, "Cargo.toml"))
     with open(cargo_toml, "r") as f:
+        in_package_group = False
         for line in f:
+            if line.strip() == "[package]":
+                in_package_group = True
+                continue
+            elif line.startswith("["):
+                in_package_group = False
+            if not in_package_group:
+                continue
             if line.startswith("version"):
                 return line.split("=")[1].strip(' "\n')
-    print(f"error: could not parse version from '{cargo_toml}'.")
+    print(f"error: could not parse version from '{cargo_toml}'.", file=sys.stderr)
+    sys.exit(1)
 
 
 def get_platform() -> str:
