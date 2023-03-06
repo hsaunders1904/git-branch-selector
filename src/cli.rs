@@ -28,6 +28,7 @@ pub struct Args {
     #[clap(
         value_parser,
         long,
+        short = 'C',
         default_value = ".",
         help = "Path to git repository"
     )]
