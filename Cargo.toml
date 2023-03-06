@@ -15,7 +15,7 @@ name = "bselect"
 path = "src/main.rs"
 
 [dependencies]
-clap = { version = "4.1.6", features = ["derive"] }
+clap = { version = "^3.0.0", features = ["derive"] }
 dialoguer = "0.10.3"
 directories = "4.0.1"
 git2 = "0.16.1"
