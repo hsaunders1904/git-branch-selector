@@ -14,7 +14,7 @@ impl BranchGetter for Git2BranchGetter {
         let repo = self.open_repo()?;
         let references = repo
             .references()
-            .map_err(|e| Error::Git(format!("could not parse refs: {}", e)))?;
+            .map_err(|e| Error::Git(format!("could not parse refs: {}", e.message())))?;
         let branches = Git2BranchGetter::refs_to_branches(references)?;
         Ok(branches)
     }
@@ -44,8 +44,8 @@ impl Git2BranchGetter {
     fn refs_to_branches(references: git2::References) -> Result<Vec<Branch>, Error> {
         let mut branches = vec![];
         for ref_result in references {
-            let reference =
-                ref_result.map_err(|e| Error::Git(format!("could not parse ref: {}", e)))?;
+            let reference = ref_result
+                .map_err(|e| Error::Git(format!("could not parse ref: {}", e.message())))?;
             if let Some(branch) = Git2BranchGetter::make_branch(&reference) {
                 branches.push(branch);
             }
