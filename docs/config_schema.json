@@ -5,18 +5,9 @@
     "description": "Schema for git-branch-selector's config file.",
     "type": "object",
     "properties": {
-        "base": {
-            "type": "object",
-            "description": "base config",
-            "properties": {
-                "theme": {
-                    "type": "string",
-                    "description": "The name of the theme to use."
-                }
-            },
-            "required": [
-                "theme"
-            ]
+        "theme": {
+            "type": "string",
+            "description": "The name of the theme to use."
         },
         "themes": {
             "description": "Array of themes to choose from.",
@@ -209,7 +200,7 @@
         }
     },
     "required": [
-        "base",
+        "theme",
         "themes"
     ]
 }
