@@ -60,6 +60,10 @@ jobs:
           override: true
           profile: minimal
 
+      - name: Install Ubuntu dependencies
+        if: startsWith(matrix.job.os, 'ubuntu')
+        run: apt install -y libssl-dev
+
       - name: Build
         uses: actions-rs/cargo@v1
         with:
