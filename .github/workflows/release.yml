@@ -60,8 +60,7 @@ jobs:
           override: true
           profile: minimal
 
-      - name: Install Ubuntu dependencies
-        if: startsWith(matrix.job.os, 'ubuntu')
+      - name: Install dependencies
         run: apt install -y libssl-dev
 
       - name: Build
