@@ -11,7 +11,7 @@ pub fn compile_filters(filters: &[String]) -> Result<Vec<regex::Regex>, Error> {
 }
 
 fn string_to_regex(s: &str) -> Result<regex::Regex, Error> {
-    regex::Regex::new(s).map_err(|e| Error::Regex(format!("{}", e)))
+    regex::Regex::new(s).map_err(|e| Error::Regex(format!("{e}")))
 }
 
 pub fn matches_regex(branch: &git::Branch, patterns: &[regex::Regex]) -> bool {
@@ -19,7 +19,7 @@ pub fn matches_regex(branch: &git::Branch, patterns: &[regex::Regex]) -> bool {
         return true;
     }
     for pattern in patterns {
-        if pattern.is_match(&format!("{}", branch)) {
+        if pattern.is_match(&format!("{branch}")) {
             return true;
         }
     }

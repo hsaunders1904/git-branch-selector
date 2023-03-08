@@ -23,7 +23,7 @@ impl BranchSelector for DialogueSelector {
                 Some(x) => x,
                 None => return Ok(vec![]),
             },
-            Err(e) => return Err(Error::Select(format!("{}", e))),
+            Err(e) => return Err(Error::Select(format!("{e}"))),
         };
         let selected = idxs.iter().map(|i| branches[*i].to_owned());
         Ok(selected.collect())

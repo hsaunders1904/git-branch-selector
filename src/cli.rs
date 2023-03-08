@@ -42,7 +42,7 @@ where
 {
     Args::try_parse_from(argv).map_err(|e| match e.print() {
         Ok(_) => Error::Cli("".to_string()),
-        Err(print_err) => Error::Cli(format!("could not print parser error: {}", print_err)),
+        Err(e) => Error::Cli(format!("could not print parser error: {e}")),
     })
 }
 

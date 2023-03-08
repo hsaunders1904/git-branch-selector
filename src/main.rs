@@ -30,7 +30,7 @@ fn main() {
         theme: config.theme(),
     };
     bselect(&args, getter, selector, &mut std::io::stdout()).unwrap_or_else(|e| {
-        eprintln!("{}", e);
+        eprintln!("{e}");
         std::process::exit(1);
     })
 }
@@ -43,7 +43,7 @@ fn bselect(
 ) -> Result<(), Error> {
     if args.config {
         writeln!(stdout, "{}", config::file::config_path()?.to_string_lossy())
-            .map_err(|e| Error::Terminal(format!("cannot write config path: {}", e)))?;
+            .map_err(|e| Error::Terminal(format!("cannot write config path: {e}")))?;
         return Ok(());
     }
     let branches = filter_branches(branch_getter.branches()?, args.all, &args.filters)?;
@@ -53,7 +53,7 @@ fn bselect(
         .map(|b| b.to_string())
         .collect::<Vec<_>>();
     writeln!(stdout, "{}", branch_names.join(" "))
-        .map_err(|e| Error::Terminal(format!("cannot write to stdout: {}", e)))
+        .map_err(|e| Error::Terminal(format!("cannot write to stdout: {e}")))
 }
 
 fn parse_args(argv: impl Iterator<Item = String>) -> cli::Args {
@@ -64,14 +64,14 @@ fn read_config() -> config::Config {
     let file_path = match config::file::config_path() {
         Ok(p) => p,
         Err(e) => {
-            eprintln!("{}", e);
+            eprintln!("{e}");
             return config::Config::default();
         }
     };
     match config::file::init_config(&file_path) {
         Ok(c) => c,
         Err(e) => {
-            eprintln!("{}", e);
+            eprintln!("{e}");
             config::Config::default()
         }
     }

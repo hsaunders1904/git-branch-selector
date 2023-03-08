@@ -21,16 +21,15 @@ pub fn config_path() -> Result<PathBuf, Error> {
         Some(x) => Ok(x.config_dir().join(CONFIG_DIR_NAME)),
         None => return Err(Error::Config("could not find config directory".to_string())),
     }?;
-    Ok(conf_dir.join(format!("{}.{}", CONFIG_FILE_NAME, CONFIG_FILE_EXT)))
+    Ok(conf_dir.join(format!("{CONFIG_FILE_NAME}.{CONFIG_FILE_EXT}")))
 }
 
 fn read_config_file(path: &PathBuf) -> Result<Config, Error> {
     let mut config_file = std::fs::File::open(path).map_err(|e| {
         Error::Config(format!(
-            "{} ' {}': {}",
+            "{} ' {}': {e}",
             "could not open config file",
-            path.to_string_lossy(),
-            e
+            path.to_string_lossy()
         ))
     })?;
     Config::from_json(&mut config_file)
@@ -58,10 +57,9 @@ fn create_config_dirs(path: &Path) -> Result<(), Error> {
 fn create_new_config_file(path: &Path) -> Result<Config, Error> {
     let mut config_file = std::fs::File::create(path).map_err(|e| {
         Error::Config(format!(
-            "{} '{}': {}",
+            "{} '{}': {e}",
             "could not create config file",
-            path.to_string_lossy(),
-            e
+            path.to_string_lossy()
         ))
     })?;
     let config = Config::default();
@@ -132,12 +130,7 @@ mod tests {
                     }
                 ]
             }"#;
-            write!(
-                std::fs::File::create(&conf_path).unwrap(),
-                "{}",
-                file_content
-            )
-            .unwrap();
+            write!(std::fs::File::create(&conf_path).unwrap(), "{file_content}").unwrap();
 
             let conf = init_config(&conf_path).unwrap();
 

@@ -46,16 +46,16 @@ impl Config {
 
     pub fn to_json(&self) -> Result<String, Error> {
         serde_json::to_string_pretty(self)
-            .map_err(|e| Error::Config(format!("{}: {}", COULD_NOT_SERIALIZE, e)))
+            .map_err(|e| Error::Config(format!("{COULD_NOT_SERIALIZE}: {e}")))
     }
 
     pub fn from_json(to_read: &mut impl std::io::Read) -> Result<Config, Error> {
         let mut json_str = String::new();
         to_read
             .read_to_string(&mut json_str)
-            .map_err(|e| Error::Config(format!("{}: {}", COULD_NOT_READ, e)))?;
+            .map_err(|e| Error::Config(format!("{COULD_NOT_READ}: {e}")))?;
         let mut config: Config = serde_json::from_str(&json_str)
-            .map_err(|e| Error::Config(format!("{}: {}", COULD_NOT_PARSE, e)))?;
+            .map_err(|e| Error::Config(format!("{COULD_NOT_PARSE}: {e}")))?;
         if !config.themes.iter().any(|t| t.name == DEFAULT_THEME) {
             config.themes.push(ConsoleTheme::default());
         }

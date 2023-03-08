@@ -46,7 +46,7 @@ mod tests {
 
         let expected_style = console::Style::new().for_stderr();
         let expected_obj = expected_style.apply_to("");
-        assert_eq!(format!("{}", styled_obj), format!("{}", expected_obj));
+        assert_eq!(format!("{styled_obj}"), format!("{expected_obj}"));
     }
 
     #[test]
@@ -69,6 +69,6 @@ mod tests {
             .bright()
             .on_bright();
         let expected_obj = expected_style.apply_to("my_text");
-        assert_eq!(format!("{}", ss), format!("{}", expected_obj));
+        assert_eq!(format!("{ss}"), format!("{expected_obj}"));
     }
 }
