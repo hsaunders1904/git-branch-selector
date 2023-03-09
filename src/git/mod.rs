@@ -1,4 +1,5 @@
 pub mod git2;
+pub mod gitoxide;
 
 use std::fmt::Display;
 
