@@ -11,31 +11,44 @@ impl BranchGetter for GixBranchGetter {
     fn branches(&self) -> Result<Vec<Branch>, Error> {
         let repo = gix::discover(&self.repo_dir)
             .map_err(|e| Error::Git(format!("could not read repository: {e}")))?;
-
         let refs = repo
             .references()
             .map_err(|e| Error::Git(format!("could not parse refs: {e}")))?;
-
         let locals = refs
             .local_branches()
-            .map_err(|e| Error::Git(format!("{e}")))?
-            .map(|r| Branch {
-                name: r.unwrap().name().file_name().to_string(),
-                branch_type: BranchType::Local,
-            });
+            .map_err(|e| Error::Git(format!("could not parse ref: {e}")))?
+            .filter_map(|r| ref_to_branch(r, BranchType::Local));
         let remotes = refs
             .remote_branches()
-            .map_err(|e| Error::Git(format!("{e}")))?
-            .map(|r| Branch {
-                name: r.unwrap().name().file_name().to_string(),
-                branch_type: BranchType::Remote,
-            });
+            .map_err(|e| Error::Git(format!("could not parse ref: {e}")))?
+            .filter_map(|r| ref_to_branch(r, BranchType::Remote));
         Ok(locals.chain(remotes).collect())
     }
+}
 
-    // fn ref_to_branch(reference: gix::Reference) -> Option<Branch> {
-    //     Some(Branch {name: reference.try_id()?.to_string(),
-    // }
+fn ref_to_branch(
+    reference: Result<
+        gix::Reference,
+        Box<dyn std::error::Error + std::marker::Send + std::marker::Sync>,
+    >,
+    branch_type: BranchType,
+) -> Option<Branch> {
+    if let Ok(r) = reference {
+        if is_symbolic_ref(&r) {
+            // we don't want symbolic refs e.g., 'remotes/origin/HEAD'
+            return None;
+        }
+        Some(Branch {
+            name: r.name().shorten().to_string(),
+            branch_type,
+        })
+    } else {
+        None
+    }
+}
+
+fn is_symbolic_ref(reference: &gix::Reference) -> bool {
+    reference.try_id().is_none()
 }
 
 #[cfg(test)]
@@ -51,7 +64,6 @@ mod tests {
         };
 
         let branches = getter.branches().unwrap();
-        println!("{:?}", branches);
 
         let main_branch = Branch {
             name: "main".to_string(),
