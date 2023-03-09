@@ -1,4 +1,3 @@
-pub mod git2;
 pub mod gitoxide;
 
 use std::fmt::Display;
@@ -34,27 +33,31 @@ pub trait BranchGetter {
 mod tests {
     use super::*;
 
-    #[test]
-    fn to_string_prepends_remotes_if_remote_branch() {
-        let branch = Branch {
-            name: "some_name".to_string(),
-            branch_type: BranchType::Remote,
-        };
+    mod branch {
+        use super::*;
 
-        let branch_str = branch.to_string();
+        #[test]
+        fn to_string_prepends_remotes_if_remote_branch() {
+            let branch = Branch {
+                name: "some_name".to_string(),
+                branch_type: BranchType::Remote,
+            };
 
-        assert_eq!(branch_str, "remotes/some_name")
-    }
+            let branch_str = branch.to_string();
 
-    #[test]
-    fn to_string_returns_name_if_local_branch() {
-        let branch = Branch {
-            name: "some_name".to_string(),
-            branch_type: BranchType::Local,
-        };
+            assert_eq!(branch_str, "remotes/some_name")
+        }
 
-        let branch_str = branch.to_string();
+        #[test]
+        fn to_string_returns_name_if_local_branch() {
+            let branch = Branch {
+                name: "some_name".to_string(),
+                branch_type: BranchType::Local,
+            };
 
-        assert_eq!(branch_str, "some_name")
+            let branch_str = branch.to_string();
+
+            assert_eq!(branch_str, "some_name")
+        }
     }
 }
