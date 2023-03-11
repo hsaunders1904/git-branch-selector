@@ -23,7 +23,7 @@ pub enum Error {
 fn main() {
     let args = parse_args(std::env::args());
     let config = read_config();
-    let getter = git::git2::Git2BranchGetter {
+    let getter = git::fs::FsBranchGetter {
         repo_dir: args.git_dir.clone(),
     };
     let selector = select::DialogueSelector {
