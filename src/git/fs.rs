@@ -66,7 +66,7 @@ fn discover_repo(dir: &PathBuf) -> Result<PathBuf, Error> {
             Some(p) => p.to_path_buf(),
             None => {
                 return Err(Error::Git(format!(
-                    "'{}' not a git repository (or any of its parents)",
+                    "not a git repository (or any of its parents): '{}'",
                     dir.to_string_lossy()
                 )))
             }
