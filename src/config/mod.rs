@@ -11,18 +11,8 @@ const COULD_NOT_SERIALIZE: &str = "could not serialize config";
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct Config {
-    #[serde(default = "default_theme")]
     pub theme: String,
-    #[serde(default = "default_themes")]
     pub themes: Vec<ConsoleTheme>,
-}
-
-fn default_theme() -> String {
-    "default".to_string()
-}
-
-fn default_themes() -> Vec<ConsoleTheme> {
-    vec![ConsoleTheme::default()]
 }
 
 impl Default for Config {
@@ -68,14 +58,6 @@ mod test {
     use super::*;
     use crate::select::theme::style::Style;
     use crate::select::theme::styled_string::StyledString;
-
-    #[test]
-    fn empty_json_returns_default_config() {
-        let mut to_read = "{}".as_bytes();
-        let conf = Config::from_json(&mut to_read).unwrap();
-
-        assert_eq!(conf, Config::default());
-    }
 
     #[test]
     fn theme_returns_theme_with_name_from_config() {
@@ -193,9 +175,7 @@ mod test {
     #[test]
     fn read_json_equal_to_generated_json() {
         let json = r#"{
-            "base": {
-              "theme": "emoji"
-            },
+            "theme": "emoji",
             "themes": [
               {
                 "name": "default",
