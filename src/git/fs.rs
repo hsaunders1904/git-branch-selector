@@ -44,14 +44,14 @@ fn parse_refs_inner(dir: &PathBuf) -> Result<Vec<String>, Box<dyn std::error::Er
         if item.file_type()?.is_file() {
             // we skip symbolic refs (i.e., refs that point to other refs)
             if !std::fs::read_to_string(item.path())?.contains('/') {
-                refs.push(item.file_name().to_str().unwrap().to_string());
+                refs.push(item.file_name().to_string_lossy().to_string());
             }
         } else if item.file_type()?.is_dir() {
             let inner_refs = parse_refs(&item.path())?;
             refs.extend(
                 inner_refs
                     .iter()
-                    .map(|r| format!("{}/{r}", item.file_name().to_str().unwrap())),
+                    .map(|r| format!("{}/{r}", item.file_name().to_string_lossy())),
             );
         }
     }
