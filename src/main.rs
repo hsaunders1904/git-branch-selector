@@ -57,7 +57,10 @@ fn bselect(
 }
 
 fn parse_args(argv: impl Iterator<Item = String>) -> cli::Args {
-    cli::parse_args(argv).unwrap_or_else(|_| std::process::exit(1))
+    cli::parse_args(argv)
+        .unwrap_or_else(|_| std::process::exit(1))
+        // if args is `None`, we exit with no error, e.g., `--help`
+        .unwrap_or_else(|| std::process::exit(0))
 }
 
 fn read_config() -> config::Config {

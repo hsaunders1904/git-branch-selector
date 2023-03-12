@@ -35,15 +35,23 @@ pub struct Args {
     pub git_dir: std::path::PathBuf,
 }
 
-pub fn parse_args<I, T>(argv: I) -> Result<Args, Error>
+pub fn parse_args<I, T>(argv: I) -> Result<Option<Args>, Error>
 where
     I: IntoIterator<Item = T>,
     T: Into<std::ffi::OsString> + Clone,
 {
-    Args::try_parse_from(argv).map_err(|e| match e.print() {
-        Ok(_) => Error::Cli("".to_string()),
-        Err(e) => Error::Cli(format!("could not print parser error: {e}")),
-    })
+    match Args::try_parse_from(argv) {
+        Ok(args) => Ok(Some(args)),
+        Err(e) => {
+            if e.kind() == clap::ErrorKind::DisplayHelp {
+                e.print()
+                    .map_err(|e| Error::Cli(format!("could not display help: {e}")))?;
+                Ok(None)
+            } else {
+                Err(Error::Cli(format!("{e}")))
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -56,7 +64,7 @@ mod tests {
 
         let args = parse_args(argv.iter());
 
-        assert!(args.is_err());
+        assert!(args.unwrap().is_none());
     }
 
     #[test]
@@ -74,7 +82,7 @@ mod tests {
 
         let args = parse_args(argv.iter());
 
-        assert_eq!(args.unwrap().filters, vec!["pattern"]);
+        assert_eq!(args.unwrap().unwrap().filters, vec!["pattern"]);
     }
 
     #[test]
@@ -83,7 +91,7 @@ mod tests {
 
         let args = parse_args(argv.iter());
 
-        assert_eq!(args.unwrap().filters, vec!["a", "b", "c"]);
+        assert_eq!(args.unwrap().unwrap().filters, vec!["a", "b", "c"]);
     }
 
     #[test]
@@ -92,7 +100,7 @@ mod tests {
 
         let args = parse_args(argv.iter());
 
-        assert!(!args.unwrap().all);
+        assert!(!args.unwrap().unwrap().all);
     }
 
     #[test]
@@ -101,7 +109,7 @@ mod tests {
 
         let args = parse_args(argv.iter());
 
-        assert!(args.unwrap().all);
+        assert!(args.unwrap().unwrap().all);
     }
 
     #[test]
@@ -110,7 +118,7 @@ mod tests {
 
         let args = parse_args(argv.iter());
 
-        assert!(!args.unwrap().config);
+        assert!(!args.unwrap().unwrap().config);
     }
 
     #[test]
@@ -119,7 +127,7 @@ mod tests {
 
         let args = parse_args(argv.iter());
 
-        assert!(args.unwrap().config);
+        assert!(args.unwrap().unwrap().config);
     }
 
     #[test]
@@ -128,7 +136,10 @@ mod tests {
 
         let args = parse_args(argv.iter());
 
-        assert_eq!(args.unwrap().git_dir.to_string_lossy(), "/some/path");
+        assert_eq!(
+            args.unwrap().unwrap().git_dir.to_string_lossy(),
+            "/some/path"
+        );
     }
 
     #[test]
@@ -137,6 +148,6 @@ mod tests {
 
         let args = parse_args(argv.iter());
 
-        assert_eq!(args.unwrap().git_dir.to_string_lossy(), ".");
+        assert_eq!(args.unwrap().unwrap().git_dir.to_string_lossy(), ".");
     }
 }
