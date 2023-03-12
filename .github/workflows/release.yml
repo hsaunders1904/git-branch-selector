@@ -60,9 +60,6 @@ jobs:
           override: true
           profile: minimal
 
-      - name: Install dependencies
-        run: apt install -y libssl-dev
-
       - name: Build
         uses: actions-rs/cargo@v1
         with:
