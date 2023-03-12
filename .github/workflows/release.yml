@@ -43,7 +43,7 @@ jobs:
           - { os: macos-latest, target: aarch64-apple-darwin }
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Get version
         id: get-version
@@ -53,7 +53,7 @@ jobs:
           echo "version=${version}" >> $GITHUB_OUTPUT
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@v1.0.6
         with:
           toolchain: stable
           target: ${{ matrix.job.target }}
@@ -61,7 +61,7 @@ jobs:
           profile: minimal
 
       - name: Build
-        uses: actions-rs/cargo@v1
+        uses: actions-rs/cargo@v1.0.1
         with:
           use-cross: true
           command: build
@@ -117,7 +117,7 @@ jobs:
     needs: release
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Get version
         id: get-version
@@ -127,7 +127,7 @@ jobs:
           echo "version=${version}" >> $env:GITHUB_OUTPUT
 
       - name: Build
-        uses: actions-rs/cargo@v1
+        uses: actions-rs/cargo@v1.0.1
         with:
           command: build
           args: --locked --release
