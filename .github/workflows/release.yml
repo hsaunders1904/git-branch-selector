@@ -124,7 +124,7 @@ jobs:
         run: |
           python3 -m pip install toml
           $version = python3 ./tools/package/version
-          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "version=${version}" >> $env:GITHUB_OUTPUT
 
       - name: Build
         uses: actions-rs/cargo@v1
