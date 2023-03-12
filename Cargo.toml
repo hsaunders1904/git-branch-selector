@@ -15,7 +15,7 @@ name = "bselect"
 path = "src/main.rs"
 
 [dependencies]
-clap = { version = "^3.0.0", default-features = false, features = ["derive", "std"] }
+clap = { version = "^3.0.0", features = ["derive"] }
 dialoguer = { version = "0.10.3", default-features = false, features = [] }
 directories = "4.0.1"
 regex = { version = "1.7.1", default-features = false, features = ["std"] }
