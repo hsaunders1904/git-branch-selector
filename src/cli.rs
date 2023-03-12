@@ -10,7 +10,7 @@ use crate::Error;
 pub struct Args {
     #[clap(
         value_parser,
-        help = "List only the branches that match one of the given regex pattern(s)"
+        help = "List only the branches that match at least one of the given regex pattern(s)"
     )]
     pub filters: Vec<String>,
     #[clap(
@@ -43,12 +43,16 @@ where
     match Args::try_parse_from(argv) {
         Ok(args) => Ok(Some(args)),
         Err(e) => {
-            if e.kind() == clap::ErrorKind::DisplayHelp {
-                e.print()
-                    .map_err(|e| Error::Cli(format!("could not display help: {e}")))?;
+            e.print()
+                .map_err(|e| Error::Cli(format!("could not display command line error: {e}")))?;
+            if e.kind() == clap::ErrorKind::DisplayHelp
+                || e.kind() == clap::ErrorKind::DisplayVersion
+            {
                 Ok(None)
             } else {
-                Err(Error::Cli(format!("{e}")))
+                // we use `.print()` above as that gives us errors in colour,
+                // so no need to propagate the error message here
+                Err(Error::Cli("".to_string()))
             }
         }
     }
@@ -68,6 +72,15 @@ mod tests {
     }
 
     #[test]
+    fn no_error_given_version() {
+        let argv: Vec<&str> = vec!["bselect", "--version"];
+
+        let args = parse_args(argv.iter());
+
+        assert!(args.unwrap().is_none());
+    }
+
+    #[test]
     fn no_error_given_no_args() {
         let argv: Vec<&str> = vec!["bselect"];
 
@@ -75,6 +88,15 @@ mod tests {
 
         assert!(args.is_ok());
         assert!(args.unwrap().is_some());
+    }
+
+    #[test]
+    fn error_given_invalid_arg() {
+        let argv: Vec<&str> = vec!["bselect", "-abc"];
+
+        let args = parse_args(argv.iter());
+
+        assert!(args.is_err());
     }
 
     #[test]
