@@ -74,6 +74,7 @@ mod tests {
         let args = parse_args(argv.iter());
 
         assert!(args.is_ok());
+        assert!(args.unwrap().is_some());
     }
 
     #[test]
