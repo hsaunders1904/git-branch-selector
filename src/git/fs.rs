@@ -79,6 +79,8 @@ fn discover_repo(dir: &PathBuf) -> Result<PathBuf, Error> {
 mod tests {
     use std::io::Write;
 
+    use same_file::is_same_file;
+
     use super::*;
 
     fn make_test_git_dir() -> Result<tempfile::TempDir, Box<dyn std::error::Error>> {
@@ -178,10 +180,7 @@ mod tests {
 
         let git_dir = discover_repo(&git_path).unwrap();
 
-        assert_eq!(
-            git_dir,
-            PathBuf::from(format!("{}/.git", git_path.to_string_lossy()))
-        );
+        assert!(is_same_file(git_dir, temp_dir.path().join(".git")).unwrap());
     }
 
     #[test]
@@ -191,10 +190,7 @@ mod tests {
 
         let git_dir = discover_repo(&PathBuf::from(src_dir.path())).unwrap();
 
-        assert_eq!(
-            git_dir,
-            PathBuf::from(format!("{}/.git", temp_dir.path().to_string_lossy()))
-        );
+        assert!(is_same_file(git_dir, temp_dir.path().join(".git")).unwrap());
     }
 
     #[test]
