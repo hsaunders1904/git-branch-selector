@@ -1,6 +1,7 @@
 use crate::git::{Branch, BranchGetter, BranchType};
 use crate::Error;
 
+use std::io::BufRead;
 use std::path::PathBuf;
 
 const GIT_DIR: &str = ".git";
@@ -26,6 +27,7 @@ impl BranchGetter for FsBranchGetter {
                 branch_type: BranchType::Remote,
             });
         }
+        branches.append(&mut parse_packed_refs(&git_dir.join("packed-refs"))?);
         Ok(branches)
     }
 }
@@ -56,6 +58,51 @@ fn parse_refs_inner(dir: &PathBuf) -> Result<Vec<String>, Box<dyn std::error::Er
         }
     }
     Ok(refs)
+}
+
+fn parse_packed_refs(packed_file: &PathBuf) -> Result<Vec<Branch>, Error> {
+    if !packed_file.is_file() {
+        return Ok(vec![]);
+    }
+    parse_packed_refs_inner(packed_file)
+        .map_err(|e| Error::Git(format!("could not parse packed refs: {e}")))
+}
+
+fn parse_packed_refs_inner(
+    packed_file: &PathBuf,
+) -> Result<Vec<Branch>, Box<dyn std::error::Error>> {
+    Ok(read_lines(packed_file)?
+        .collect::<Result<Vec<_>, _>>()?
+        .iter()
+        .filter_map(|line| parse_packed_ref(line))
+        .collect())
+}
+
+fn parse_packed_ref(raw_line: &str) -> Option<Branch> {
+    let line = raw_line.trim().to_string();
+    if line.is_empty() || line.starts_with('#') {
+        return None;
+    }
+    let packed_ref = line.split(' ').nth(1)?;
+    if let Some(ref_name) = packed_ref.strip_prefix("refs/remotes/") {
+        return Some(Branch {
+            name: ref_name.to_string(),
+            branch_type: BranchType::Remote,
+        });
+    } else if let Some(ref_name) = packed_ref.strip_prefix("refs/heads/") {
+        return Some(Branch {
+            name: ref_name.to_string(),
+            branch_type: BranchType::Local,
+        });
+    }
+    None
+}
+
+fn read_lines(
+    file_path: &PathBuf,
+) -> Result<std::io::Lines<std::io::BufReader<std::fs::File>>, std::io::Error> {
+    let file = std::fs::File::open(file_path)?;
+    Ok(std::io::BufReader::new(file).lines())
 }
 
 fn discover_repo(dir: &PathBuf) -> Result<PathBuf, Error> {
@@ -113,6 +160,21 @@ mod tests {
         std::fs::create_dir_all(&upstream_dir)?;
         std::fs::File::create(upstream_dir.join("main"))?
             .write_all("707a178071655bed661318a5344557fe3e9a6ce1".as_bytes())?;
+
+        // make packed refs
+        let packed_refs = git_dir.join("packed-refs");
+        std::fs::File::create(packed_refs)?.write_all(
+            vec![
+                "# pack-refs with: peeled fully-peeled sorted",
+                "6e442625fe1a269a068c369e58ce11295dcdeb0c refs/remotes/origin/packed",
+                "6e442625fe1a269a068c369e58ce11295dcdeb0c refs/tags/v0.1.0",
+                "^a513aa4efda3f06f316feb6b5df23d32480c435e",
+                "12344f25fe1a269a068c369e58ce11295dcdeb0c refs/heads/upstream/packed_2",
+                "",
+            ]
+            .join("\n")
+            .as_bytes(),
+        )?;
         Ok(temp_dir)
     }
 
@@ -128,6 +190,10 @@ mod tests {
                 branch_type: BranchType::Remote,
             },
             Branch {
+                name: "origin/packed".to_string(),
+                branch_type: BranchType::Remote,
+            },
+            Branch {
                 name: "origin/remote_branch".to_string(),
                 branch_type: BranchType::Remote,
             },
@@ -138,6 +204,10 @@ mod tests {
             Branch {
                 name: "upstream/main".to_string(),
                 branch_type: BranchType::Remote,
+            },
+            Branch {
+                name: "upstream/packed_2".to_string(),
+                branch_type: BranchType::Local,
             },
             Branch {
                 name: "user/some_dev_branch".to_string(),
