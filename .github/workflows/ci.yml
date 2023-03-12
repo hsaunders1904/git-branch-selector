@@ -20,7 +20,7 @@ jobs:
           pre-commit install
           pre-commit run --all-files
 
-      - uses: actions-rs/toolchain@v1
+      - uses: actions-rs/toolchain@v1.0.6
         with:
           toolchain: stable
 
