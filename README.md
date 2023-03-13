@@ -76,3 +76,6 @@ cargo install --path .
 ```console
 cargo test
 ```
+
+Or grab the
+[latest release](https://github.com/hsaunders1904/git-branch-selector/releases/latest) package or installer.
