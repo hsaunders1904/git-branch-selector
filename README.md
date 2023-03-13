@@ -1,6 +1,7 @@
 # Git Branch Selector
 
 [![Build Status](https://github.com/hsaunders1904/git-branch-selector/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hsaunders1904/git-branch-selector/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/github/hsaunders1904/git-branch-selector/branch/main/graph/badge.svg?token=BIE69ZU0D8)](https://codecov.io/github/hsaunders1904/git-branch-selector)
 
 Interactively select git branches and print them to stdout.
 Use within pipes to perform commands on multiple git branches.
