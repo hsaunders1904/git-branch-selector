@@ -18,6 +18,7 @@ path = "src/main.rs"
 clap = { version = "^3.0.0", features = ["derive"] }
 dialoguer = { version = "0.10.3", default-features = false, features = [] }
 directories = "4.0.1"
+gix = "0.51.0"
 regex = { version = "1.7.1", default-features = false, features = ["std"] }
 serde = { version = "1.0.152", default-features = false, features = ["derive"] }
 serde_json = "1.0.93"

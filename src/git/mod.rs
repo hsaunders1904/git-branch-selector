@@ -1,8 +1,10 @@
-pub mod fs;
+mod branch_getter;
+mod gitoxide;
 
 use std::fmt::Display;
 
-use crate::Error;
+pub use crate::git::branch_getter::BranchGetter;
+pub use crate::git::gitoxide::GixBranchGetter;
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum BranchType {
@@ -25,35 +27,34 @@ impl Display for Branch {
     }
 }
 
-pub trait BranchGetter {
-    fn branches(&self) -> Result<Vec<Branch>, Error>;
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
 
-    #[test]
-    fn to_string_prepends_remotes_if_remote_branch() {
-        let branch = Branch {
-            name: "some_name".to_string(),
-            branch_type: BranchType::Remote,
-        };
+    mod branch {
+        use super::super::{Branch, BranchType};
 
-        let branch_str = branch.to_string();
+        #[test]
+        fn to_string_prepends_remotes_if_remote_branch() {
+            let branch = Branch {
+                name: "some_name".to_string(),
+                branch_type: BranchType::Remote,
+            };
 
-        assert_eq!(branch_str, "remotes/some_name")
-    }
+            let branch_str = branch.to_string();
 
-    #[test]
-    fn to_string_returns_name_if_local_branch() {
-        let branch = Branch {
-            name: "some_name".to_string(),
-            branch_type: BranchType::Local,
-        };
+            assert_eq!(branch_str, "remotes/some_name")
+        }
 
-        let branch_str = branch.to_string();
+        #[test]
+        fn to_string_returns_name_if_local_branch() {
+            let branch = Branch {
+                name: "some_name".to_string(),
+                branch_type: BranchType::Local,
+            };
 
-        assert_eq!(branch_str, "some_name")
+            let branch_str = branch.to_string();
+
+            assert_eq!(branch_str, "some_name")
+        }
     }
 }
