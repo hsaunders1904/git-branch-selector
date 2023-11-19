@@ -1,5 +1,5 @@
 name: git-branch-selector CI
-
+permissions: read-all
 on:
   pull_request:
   push:
@@ -11,8 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@cargo-tarpaulin
 
       - name: Static Analysis
         run: |
@@ -20,16 +21,11 @@ jobs:
           pre-commit install
           pre-commit run --all-files
 
-      - uses: actions-rs/toolchain@v1.0.6
-        with:
-          toolchain: stable
-
-      - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
+      - name: Run tests
         env:
           CLICOLOR_FORCE: 1
-        with:
-          version: '0.15.0'
+        run: |
+          cargo tarpaulin
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3

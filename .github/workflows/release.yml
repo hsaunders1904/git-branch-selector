@@ -42,8 +42,12 @@ jobs:
           - { os: macos-latest, target: x86_64-apple-darwin }
           - { os: macos-latest, target: aarch64-apple-darwin }
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.job.target }}
+      - uses: taiki-e/install-action@cross
 
       - name: Get version
         id: get-version
@@ -52,20 +56,8 @@ jobs:
           version="$(./tools/package/version)"
           echo "version=${version}" >> $GITHUB_OUTPUT
 
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1.0.6
-        with:
-          toolchain: stable
-          target: ${{ matrix.job.target }}
-          override: true
-          profile: minimal
-
       - name: Build
-        uses: actions-rs/cargo@v1.0.1
-        with:
-          use-cross: true
-          command: build
-          args: --locked --release --target=${{ matrix.job.target }}
+        run: cross build --locked --release --target=${{ matrix.job.target }}
 
       - name: Make deb package
         if: startsWith(matrix.job.os, 'ubuntu')
@@ -116,8 +108,8 @@ jobs:
     runs-on: windows-latest
     needs: release
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v3
 
       - name: Get version
         id: get-version
@@ -127,10 +119,7 @@ jobs:
           echo "version=${version}" >> $env:GITHUB_OUTPUT
 
       - name: Build
-        uses: actions-rs/cargo@v1.0.1
-        with:
-          command: build
-          args: --locked --release
+        run: cargo build --locked --release
 
       - name: Make zip package
         run: |
