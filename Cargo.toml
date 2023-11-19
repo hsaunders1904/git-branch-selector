@@ -1,6 +1,6 @@
 [package]
 name = "git-branch-selector"
-version = "2.0.0"
+version = "2.0.1"
 authors = ["hsaunders1904 <33317174+hsaunders1904@users.noreply.github.com>"]
 description = "Command line utility to interactively select git branches"
 edition = "2021"
